@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#080810"/>
+  <!-- barra central -->
+  <rect x="182" y="235" width="148" height="42" rx="10" fill="#c8ff00"/>
+  <!-- collar izquierdo -->
+  <rect x="134" y="216" width="52" height="80" rx="13" fill="#c8ff00"/>
+  <!-- plato izquierdo -->
+  <rect x="96" y="187" width="42" height="138" rx="16" fill="#84ad00"/>
+  <!-- collar derecho -->
+  <rect x="326" y="216" width="52" height="80" rx="13" fill="#c8ff00"/>
+  <!-- plato derecho -->
+  <rect x="374" y="187" width="42" height="138" rx="16" fill="#84ad00"/>
+  <!-- barra de progreso decorativa -->
+  <rect x="86" y="400" width="340" height="18" rx="9" fill="#1e1e2e"/>
+  <rect x="86" y="400" width="218" height="18" rx="9" fill="#c8ff00"/>
+</svg>
