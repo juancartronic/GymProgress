@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { buildObjective } from "../planning.js";
-import { buildNutritionPlan } from "../planning.js";
+import { buildObjective } from "../planning";
+import { buildNutritionPlan } from "../planning";
 
 // ─── buildObjective ───────────────────────────────────────────────────────────
 describe("buildObjective", () => {
   it("goal fuerza: incrementa peso objetivo", () => {
-    const user = { weight: 80, bodyFat: 20, goal: "fuerza" };
+    const user = { weight: 80, bodyFat: 20, goal: "fuerza" as const };
     const result = buildObjective(user, 0);
     // targetWeight = 80 + Math.max(1, Math.round(80*0.025)) = 80 + 2 = 82
     expect(result.targetWeight).toBe(82);
@@ -16,7 +16,7 @@ describe("buildObjective", () => {
   });
 
   it("goal perdida: reduce peso objetivo", () => {
-    const user = { weight: 80, bodyFat: 25, goal: "perdida" };
+    const user = { weight: 80, bodyFat: 25, goal: "perdida" as const };
     const result = buildObjective(user, 1);
     // targetWeight = Math.max(45, 80 - Math.max(2, Math.round(80*0.06))) = Math.max(45, 75) = 75
     expect(result.targetWeight).toBe(75);
@@ -27,7 +27,7 @@ describe("buildObjective", () => {
   });
 
   it("goal tono: mantiene peso, solo reduce grasa", () => {
-    const user = { weight: 70, bodyFat: 22, goal: "tono" };
+    const user = { weight: 70, bodyFat: 22, goal: "tono" as const };
     const result = buildObjective(user, 0);
     expect(result.targetWeight).toBe(70);
     // targetFat = clamp(22-2, 8, 45) = 20
@@ -35,19 +35,19 @@ describe("buildObjective", () => {
   });
 
   it("planLevel 2 da horizonte de 16 semanas y profesional", () => {
-    const result = buildObjective({ weight: 75, goal: "fuerza" }, 2);
+    const result = buildObjective({ weight: 75, goal: "fuerza" as const }, 2);
     expect(result.horizonWeeks).toBe(16);
     expect(result.professional).toBe(true);
     expect(result.phase).toBe("Rendimiento avanzado");
   });
 
   it("sin bodyFat, targetFat es null", () => {
-    const result = buildObjective({ weight: 70, goal: "fuerza" }, 0);
+    const result = buildObjective({ weight: 70, goal: "fuerza" as const }, 0);
     expect(result.targetFat).toBeNull();
   });
 
   it("targetFat no baja del mínimo (8%)", () => {
-    const user = { weight: 70, bodyFat: 9, goal: "fuerza" };
+    const user = { weight: 70, bodyFat: 9, goal: "fuerza" as const };
     const result = buildObjective(user, 0);
     expect(result.targetFat).toBeGreaterThanOrEqual(8);
   });
@@ -55,8 +55,8 @@ describe("buildObjective", () => {
 
 // ─── buildNutritionPlan ───────────────────────────────────────────────────────
 describe("buildNutritionPlan", () => {
-  const userM = { weight: 80, height: 180, age: 25, gender: "masculino", goal: "fuerza" };
-  const userF = { weight: 60, height: 165, age: 30, gender: "femenino", goal: "perdida" };
+  const userM = { weight: 80, height: 180, age: 25, gender: "masculino" as const, goal: "fuerza" as const };
+  const userF = { weight: 60, height: 165, age: 30, gender: "femenino" as const, goal: "perdida" as const };
 
   it("devuelve todas las propiedades esperadas", () => {
     const result = buildNutritionPlan(userM, 0, 3);

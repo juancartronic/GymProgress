@@ -1,15 +1,23 @@
 import React from "react";
-import { S } from "../theme/styles.js";
-import { PLANS, EXDB } from "../domain/data.js";
-import { applyProfessionalProgression } from "../domain/workout.js";
-import { ILLUS } from "./Illustrations.jsx";
+import { S } from "../theme/styles";
+import { EXDB, getPlansForGoal } from "../domain/data";
+import { applyProfessionalProgression } from "../domain/workout";
+import { ILLUS } from "./Illustrations";
+import type { UserProfile, Workout, ThemeMode } from "../types";
 
-export function PlansView({ onStartWorkout, user, themeMode }) {
+interface PlansViewProps {
+  onStartWorkout: (w: Workout, level: number) => void;
+  user: UserProfile;
+  themeMode: ThemeMode;
+}
+
+export function PlansView({ onStartWorkout, user, themeMode }: PlansViewProps) {
   const planAccent = themeMode === "light" ? "#2b6500" : S.accent;
+  const plans = getPlansForGoal(user.goal);
   return (
     <div style={{ ...S.container, paddingTop:32 }}>
       <h1 style={{ ...S.heading, fontSize:36, margin:"0 0 24px" }}>PLANES DE<br/>ENTRENAMIENTO</h1>
-      {PLANS.map((plan, pi) => (
+      {plans.map((plan, pi) => (
         <div key={pi} style={{ marginBottom:24 }}>
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
             <div style={{ ...S.heading, fontSize:40, color:planAccent, lineHeight:1 }}>{pi+1}</div>

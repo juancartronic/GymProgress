@@ -1,4 +1,6 @@
-export const THEMES = {
+import type { ThemeMode, ThemeTokens } from "../types";
+
+export const THEMES: Record<ThemeMode, ThemeTokens> = {
   dark: {
     bgMain: "#080810",
     textMain: "#f0f0f0",

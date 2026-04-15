@@ -1,28 +1,38 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { S } from "../theme/styles.js";
-import { EXDB, EX_TIPS, DIFFICULTY } from "../domain/data.js";
-import { scaleWorkout, applyProfessionalProgression, calcCalories, fmtTime } from "../domain/workout.js";
-import { ILLUS } from "./Illustrations.jsx";
-import { ProgressBar } from "./ProgressBar.jsx";
+import { S } from "../theme/styles";
+import { EXDB, EX_TIPS, DIFFICULTY } from "../domain/data";
+import { scaleWorkout, applyProfessionalProgression, calcCalories, fmtTime } from "../domain/workout";
+import { ILLUS } from "./Illustrations";
+import { ProgressBar } from "./ProgressBar";
+import type { Workout, WorkoutResult, UserProfile, DifficultyKey } from "../types";
 
-export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "normal", onFinish, onCancel }) {
+interface ActiveWorkoutProps {
+  workout: Workout;
+  user: UserProfile;
+  planLevel: number;
+  initialDifficulty?: DifficultyKey;
+  onFinish: (result: WorkoutResult) => void;
+  onCancel: () => void;
+}
+
+export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "normal", onFinish, onCancel }: ActiveWorkoutProps) {
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0);
-  const [phase, setPhase] = useState("exercise");
+  const [phase, setPhase] = useState<"exercise" | "rest">("exercise");
   const [timer, setTimer] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [done, setDone] = useState([]);
-  const [difficulty, setDifficulty] = useState(initialDifficulty);
+  const [done, setDone] = useState<number[]>([]);
+  const [difficulty, setDifficulty] = useState<DifficultyKey>(initialDifficulty);
   const [soundOn, setSoundOn] = useState(true);
   const [vibrateOn, setVibrateOn] = useState(true);
   const [voiceOn, setVoiceOn] = useState(true);
   const [listenOn, setListenOn] = useState(false);
   const listenOnRef = useRef(false);
-  const recognitionRef = useRef(null);
-  const handleVoiceCmdRef = useRef(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const handleVoiceCmdRef = useRef<((text: string) => void) | null>(null);
   const startTime = useRef(Date.now());
-  const iRef = useRef(null);
-  const audioRef = useRef(null);
+  const iRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioRef = useRef<AudioContext | null>(null);
 
   const workoutScaled = useMemo(() => {
     const base = scaleWorkout(workout, difficulty);
@@ -36,7 +46,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
   const doneSets = done.reduce((s, d) => s + d, 0);
   const lockDifficulty = exIdx > 0 || setIdx > 0 || doneSets > 0 || phase === "rest";
 
-  const feedback = useCallback((kind) => {
+  const feedback = useCallback((kind: "tick" | "rest" | "go") => {
     if (soundOn) {
       try {
         const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -65,7 +75,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
     }
   }, [soundOn, vibrateOn]);
 
-  const speak = useCallback((text) => {
+  const speak = useCallback((text: string) => {
     if (!voiceOn) return;
     try {
       if (!window.speechSynthesis) return;
@@ -79,12 +89,12 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
 
   // Actualiza el handler de comandos en cada render para tener closures frescas
   useEffect(() => {
-    handleVoiceCmdRef.current = (text) => {
+    handleVoiceCmdRef.current = (text: string) => {
       const t = text.toLowerCase().trim();
       if (phase === "exercise") {
         if (t.includes("siguiente") || t.includes("listo") || t.includes("completado")) startRest();
       } else if (phase === "rest") {
-        if (t.includes("saltar") || t.includes("siguiente") || t.includes("listo")) { clearInterval(iRef.current); nextSet(); }
+        if (t.includes("saltar") || t.includes("siguiente") || t.includes("listo")) { if (iRef.current) clearInterval(iRef.current); nextSet(); }
       }
     };
   });
@@ -95,11 +105,11 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
     if (!listenOn || !SR) { try { recognitionRef.current?.stop(); } catch {} recognitionRef.current = null; return; }
     const rec = new SR();
     rec.lang = "es-ES"; rec.continuous = true; rec.interimResults = false;
-    rec.onresult = (ev) => {
+    rec.onresult = (ev: SpeechRecognitionEvent) => {
       const last = ev.results[ev.results.length - 1][0].transcript;
       handleVoiceCmdRef.current?.(last);
     };
-    rec.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") setListenOn(false); };
+    rec.onerror = (e: SpeechRecognitionErrorEvent) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") setListenOn(false); };
     rec.onend = () => { if (listenOnRef.current) { try { rec.start(); } catch {} } };
     recognitionRef.current = rec;
     try { rec.start(); } catch {}
@@ -107,7 +117,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
   }, [listenOn]);
 
   const nextSet = useCallback(() => {
-    clearInterval(iRef.current);
+    if (iRef.current) clearInterval(iRef.current);
     feedback("go");
     if (setIdx + 1 < ex.sets) { setSetIdx(s => s + 1); setPhase("exercise"); }
     else {
@@ -133,13 +143,13 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
     iRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime.current) / 1000));
       if (phase === "rest") setTimer(t => {
-        if (t <= 1) { clearInterval(iRef.current); nextSet(); return 0; }
+        if (t <= 1) { if (iRef.current) clearInterval(iRef.current); nextSet(); return 0; }
         const nt = t - 1;
         if (nt <= 3 && nt > 0) feedback("tick");
         return nt;
       });
     }, 1000);
-    return () => clearInterval(iRef.current);
+    return () => { if (iRef.current) clearInterval(iRef.current); };
   }, [phase, exIdx, setIdx, nextSet, feedback]);
 
   useEffect(() => () => {
@@ -155,7 +165,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
   }, [ex, phase, setIdx, speak]);
 
   const startRest = () => {
-    clearInterval(iRef.current);
+    if (iRef.current) clearInterval(iRef.current);
     setPhase("rest");
     setTimer(ex.rest);
     feedback("rest");
@@ -176,7 +186,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
           <span style={{ fontSize:11, color:lockDifficulty ? S.orange : S.muted }}>{lockDifficulty ? "bloqueada en progreso" : "editable antes de iniciar"}</span>
         </div>
         <div style={{ display:"flex", gap:8 }}>
-          {Object.entries(DIFFICULTY).map(([k, v]) => (
+          {(Object.entries(DIFFICULTY) as [DifficultyKey, { label: string }][]).map(([k, v]) => (
             <button key={k} disabled={lockDifficulty} onClick={() => setDifficulty(k)}
               style={{ ...S.btn(difficulty === k ? S.accent : "var(--inactive-btn-bg)", difficulty === k ? "#080810" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:`1px solid ${difficulty === k ? S.accent : "var(--border-main)"}`, opacity:lockDifficulty && difficulty !== k ? 0.5 : 1 }}>
               {v.label}
@@ -242,7 +252,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
               ? <p style={{ color:S.muted, fontSize:14 }}>Siguiente: <strong style={{ color:S.accent }}>{EXDB[workoutScaled.exercises[exIdx+1].id].name}</strong></p>
               : <p style={{ color:S.accent, fontSize:14, fontWeight:600 }}>Ultimo ejercicio terminado!</p>
           }
-          <button onClick={() => { clearInterval(iRef.current); nextSet(); }} style={{ ...S.btn("#1e1e2e", S.muted), marginTop:16, justifyContent:"center" }}>
+          <button onClick={() => { if (iRef.current) clearInterval(iRef.current); nextSet(); }} style={{ ...S.btn("#1e1e2e", S.muted), marginTop:16, justifyContent:"center" }}>
             Saltar descanso
           </button>
         </div>

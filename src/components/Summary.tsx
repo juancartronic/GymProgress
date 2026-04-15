@@ -1,15 +1,22 @@
 import React from "react";
-import { S } from "../theme/styles.js";
-import { EXDB, PLANS, DIFFICULTY } from "../domain/data.js";
-import { ILLUS } from "./Illustrations.jsx";
+import { S } from "../theme/styles";
+import { EXDB, DIFFICULTY, getLevelName } from "../domain/data";
+import { ILLUS } from "./Illustrations";
+import type { WorkoutResult, UserProfile } from "../types";
 
-export function Summary({ result, user, onContinue }) {
+interface SummaryProps {
+  result: WorkoutResult;
+  user: UserProfile;
+  onContinue: () => void;
+}
+
+export function Summary({ result, user, onContinue }: SummaryProps) {
   const { workout, planLevel, duration, calories, difficulty = "normal" } = result;
   return (
     <div style={{ ...S.container, paddingTop:40 }}>
       <div style={{ textAlign:"center", marginBottom:32 }}>
         <h1 style={{ ...S.heading, fontSize:44, margin:"0 0 8px", color:S.accent }}>¡COMPLETADO!</h1>
-        <p style={{ color:S.muted, margin:0 }}>{workout.focus} - {PLANS[planLevel].name} - {DIFFICULTY[difficulty]?.label || "Normal"}</p>
+        <p style={{ color:S.muted, margin:0 }}>{workout.focus} - {getLevelName(planLevel)} - {DIFFICULTY[difficulty]?.label || "Normal"}</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:24 }}>
         <div style={{ ...S.card, textAlign:"center", padding:"28px 12px", background:"var(--card-plan-bg)" }}>

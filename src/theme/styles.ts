@@ -1,3 +1,5 @@
+import React from "react";
+
 export const S = {
   app: { fontFamily: "'DM Sans',sans-serif", background: "var(--bg-main)", minHeight: "100vh", color: "var(--text-main)", overflowX: "hidden" },
   container: { maxWidth: 520, margin: "0 auto", padding: "0 16px 80px" },
@@ -6,7 +8,7 @@ export const S = {
   accent: "#c8ff00",
   orange: "#ff5500",
   muted: "var(--text-muted)",
-  btn: (bg, fg = "#080810") => ({
+  btn: (bg: string, fg = "#080810"): React.CSSProperties => ({
     background: bg,
     color: fg,
     border: "none",
@@ -21,7 +23,7 @@ export const S = {
     alignItems: "center",
     gap: 8,
   }),
-  pill: (color) => ({
+  pill: (color: string): React.CSSProperties => ({
     background: `${color}18`,
     color,
     border: `1px solid ${color}40`,

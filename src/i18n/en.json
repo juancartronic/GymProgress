@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "IRON TRACK",
+    "subtitle": "Your workout. Your progress."
+  },
+  "nav": {
+    "home": "Home",
+    "plans": "Plans",
+    "history": "History"
+  },
+  "onboarding": {
+    "createProfile": "Create profile",
+    "editProfile": "Edit profile",
+    "tellUs": "Tell us about you",
+    "name": "Name",
+    "namePlaceholder": "What's your name?",
+    "weight": "Weight (kg)",
+    "height": "Height (cm)",
+    "bodyFat": "Body fat (%)",
+    "age": "Age",
+    "sex": "Biological sex",
+    "male": "male",
+    "female": "female",
+    "goal": "Goal",
+    "diet": "Dietary preference",
+    "start": "START MY JOURNEY",
+    "save": "Save changes",
+    "back": "← Back"
+  },
+  "dashboard": {
+    "hello": "Hi,",
+    "workouts": "Workouts",
+    "streak": "Streak",
+    "kcal": "Kcal",
+    "addProfile": "+ Profile",
+    "edit": "Edit",
+    "delete": "Delete",
+    "export": "Export",
+    "import": "Import",
+    "confirmDelete": "Delete profile {{name}}? This will erase history and calendar."
+  },
+  "workout": {
+    "start": "Start workout",
+    "finish": "Finish",
+    "cancel": "Cancel",
+    "completed": "Workout completed!",
+    "rest": "Rest",
+    "sets": "Sets",
+    "reps": "Reps"
+  },
+  "toast": {
+    "profileCreated": "Profile created",
+    "profileUpdated": "Profile updated",
+    "profileDeleted": "Profile deleted",
+    "workoutDone": "Workout completed!",
+    "importSuccess": "Data imported successfully",
+    "importError": "Import error"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "light": "Light mode",
+    "dark": "Dark mode"
+  }
+}

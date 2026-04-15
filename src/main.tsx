@@ -1,17 +1,25 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { AppProvider } from "./state/AppContext";
+import "./i18n";
 
-class AppErrorBoundary extends React.Component {
-  constructor(props) {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, errorMessage: "" };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, errorMessage: error?.message || "Error desconocido" };
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("Error rendering app:", error, info);
   }
 
@@ -66,7 +74,7 @@ if (!rootElement) {
   throw new Error("No se encontro el contenedor #root en index.html");
 }
 
-const showFatalError = (message) => {
+const showFatalError = (message: string) => {
   rootElement.innerHTML = `
     <div style="min-height:100vh;background:#080810;color:#f0f0f0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif;">
       <div>
@@ -80,19 +88,23 @@ const showFatalError = (message) => {
 
 const bootstrap = async () => {
   try {
-    const mod = await import("../GymProgressApp.jsx");
+    const mod = await import("../GymProgressApp.tsx");
     const App = mod.default;
 
     ReactDOM.createRoot(rootElement).render(
       <React.StrictMode>
         <AppErrorBoundary>
-          <App />
+          <BrowserRouter>
+            <AppProvider>
+              <App />
+            </AppProvider>
+          </BrowserRouter>
         </AppErrorBoundary>
       </React.StrictMode>
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fatal bootstrap error:", error);
-    showFatalError(error?.message || error);
+    showFatalError(error instanceof Error ? error.message : String(error));
   }
 };
 

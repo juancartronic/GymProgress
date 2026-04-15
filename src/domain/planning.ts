@@ -1,6 +1,9 @@
-const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+import type { UserProfile, Objective, NutritionPlan } from "../types";
 
-export const buildObjective = (user, planLevel) => {
+const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
+
+/** Computes fitness objective (phase, target weight/fat, timeline) based on user profile and plan level. */
+export const buildObjective = (user: Partial<UserProfile> | null | undefined, planLevel: number): Objective => {
   const weight = Number(user?.weight) || 70;
   const bodyFat = user?.bodyFat ? Number(user.bodyFat) : null;
   const goal = user?.goal || "fuerza";
@@ -33,7 +36,8 @@ export const buildObjective = (user, planLevel) => {
   };
 };
 
-export const buildNutritionPlan = (user, planLevel, weeklyWorkouts) => {
+/** Calculates daily macros (cal, protein, carbs, fat), hydration, and meal count based on user metrics and goal. */
+export const buildNutritionPlan = (user: Partial<UserProfile> | null | undefined, planLevel: number, weeklyWorkouts: number): NutritionPlan => {
   const goal = user?.goal || "fuerza";
   const weight = Number(user?.weight) || 70;
   const heightCm = Number(user?.height) || 170;

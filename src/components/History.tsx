@@ -1,14 +1,21 @@
 import React from "react";
-import { S } from "../theme/styles.js";
-import { EXDB, PLANS, DIFFICULTY } from "../domain/data.js";
-import { weekStartIso, fmtDate, exLoad } from "../domain/workout.js";
-import { ProgressBar } from "./ProgressBar.jsx";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { S } from "../theme/styles";
+import { EXDB, DIFFICULTY, getLevelName } from "../domain/data";
+import { weekStartIso, fmtDate, exLoad } from "../domain/workout";
+import { ProgressBar } from "./ProgressBar";
+import type { WorkoutResult, UserProfile } from "../types";
 
-export function History({ history, user }) {
+interface HistoryProps {
+  history: WorkoutResult[];
+  user: UserProfile;
+}
+
+export function History({ history, user }: HistoryProps) {
   const totalCals = history.reduce((s, e) => s + e.calories, 0);
   const totalMins = history.reduce((s, e) => s + e.duration, 0);
-  const weekly = {};
-  const records = {};
+  const weekly: Record<string, { minutes: number; calories: number; volume: number; sessions: number }> = {};
+  const records: Record<string, number> = {};
   history.forEach(h => {
     const key = weekStartIso(h.date);
     if (!weekly[key]) weekly[key] = { minutes:0, calories:0, volume:0, sessions:0 };
@@ -51,17 +58,14 @@ export function History({ history, user }) {
         <>
           <div style={{ ...S.card, marginBottom:12, padding:"14px 14px" }}>
             <h3 style={{ ...S.heading, fontSize:16, margin:"0 0 8px", color:S.muted }}>VOLUMEN SEMANAL</h3>
-            <div style={{ display:"flex", alignItems:"end", gap:8, height:110 }}>
-              {weeklyRows.map(([k, v]) => {
-                const h = Math.max(8, Math.round((v.volume / maxWeeklyVol) * 92));
-                return (
-                  <div key={k} style={{ flex:1, textAlign:"center" }}>
-                    <div style={{ height:h, background:"linear-gradient(180deg,#c8ff00,#84ad00)", borderRadius:"8px 8px 4px 4px" }} />
-                    <div style={{ fontSize:9, color:S.muted, marginTop:6 }}>{fmtDate(k).split(" ")[0]}</div>
-                  </div>
-                );
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={130}>
+              <BarChart data={weeklyRows.map(([k, v]) => ({ week: fmtDate(k).split(" ")[0], volume: v.volume, calories: v.calories }))}>
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#888" }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip contentStyle={{ background: "#1e1e2e", border: "1px solid #333", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "#888" }} />
+                <Bar dataKey="volume" fill="#c8ff00" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
             <p style={{ fontSize:11, color:S.muted, margin:"8px 0 0" }}>Carga = sets x reps/segundos por semana.</p>
           </div>
           <div style={{ ...S.card, marginBottom:12, padding:"14px 14px" }}>
@@ -69,7 +73,7 @@ export function History({ history, user }) {
             <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
               {recordRows.map(([id, load]) => (
                 <div key={id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", background:"var(--surface-inner)", borderRadius:10, padding:"9px 10px" }}>
-                  <span style={{ fontSize:13 }}>{EXDB[id]?.name || id}</span>
+                  <span style={{ fontSize:13 }}>{EXDB[id as keyof typeof EXDB]?.name || id}</span>
                   <span style={{ fontSize:12, color:S.accent, fontFamily:"'DM Mono',monospace" }}>{load} pts</span>
                 </div>
               ))}
@@ -81,7 +85,7 @@ export function History({ history, user }) {
                 <div style={{ width:44, height:44, borderRadius:12, background:S.accent+"15", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>✓</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontWeight:600, fontSize:14 }}>{h.workout.focus}</div>
-                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{fmtDate(h.date)} - {PLANS[h.planLevel]?.name} - {DIFFICULTY[h.difficulty || "normal"]?.label || "Normal"}</div>
+                  <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{fmtDate(h.date)} - {getLevelName(h.planLevel)} - {DIFFICULTY[h.difficulty || "normal"]?.label || "Normal"}</div>
                 </div>
                 <div style={{ textAlign:"right", flexShrink:0 }}>
                   <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:S.accent }}>{h.calories} kcal</div>

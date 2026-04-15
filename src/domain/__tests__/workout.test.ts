@@ -6,7 +6,7 @@ import {
   fmtTime,
   weekStartIso,
   applyProfessionalProgression,
-} from "../workout.js";
+} from "../workout";
 
 // ─── exLoad ──────────────────────────────────────────────────────────────────
 describe("exLoad", () => {
@@ -52,7 +52,7 @@ describe("weekStartIso", () => {
 const baseWorkout = {
   day: "A",
   focus: "Test",
-  exercises: [{ id: "pushup", sets: 3, reps: 10, rest: 60 }],
+  exercises: [{ id: "pushup" as const, sets: 3, reps: 10, rest: 60 }],
 };
 
 describe("scaleWorkout", () => {
@@ -83,7 +83,8 @@ describe("scaleWorkout", () => {
 
   it("el descanso nunca baja de 15 segundos", () => {
     const shortRest = {
-      exercises: [{ id: "pushup", sets: 3, reps: 10, rest: 18 }],
+      day: "A", focus: "Test",
+      exercises: [{ id: "pushup" as const, sets: 3, reps: 10, rest: 18 }],
     };
     const result = scaleWorkout(shortRest, "intenso");
     expect(result.exercises[0].rest).toBeGreaterThanOrEqual(15);
@@ -91,11 +92,11 @@ describe("scaleWorkout", () => {
 });
 
 // ─── calcCalories ─────────────────────────────────────────────────────────────
-const profileM = { weight: 80, height: 180, age: 25, gender: "masculino" };
-const profileF = { weight: 60, height: 165, age: 30, gender: "femenino" };
+const profileM = { weight: 80, height: 180, age: 25, gender: "masculino" as const };
+const profileF = { weight: 60, height: 165, age: 30, gender: "femenino" as const };
 const exercises = [
-  { id: "pushup", sets: 3, reps: 10, rest: 60 },
-  { id: "squat", sets: 3, reps: 10, rest: 60 },
+  { id: "pushup" as const, sets: 3, reps: 10, rest: 60 },
+  { id: "squat" as const, sets: 3, reps: 10, rest: 60 },
 ];
 
 describe("calcCalories", () => {
@@ -128,8 +129,8 @@ const workoutWithLoadable = {
   day: "B",
   focus: "Piernas",
   exercises: [
-    { id: "squat", sets: 3, reps: 10, rest: 60 },
-    { id: "pushup", sets: 3, reps: 8, rest: 60 },
+    { id: "squat" as const, sets: 3, reps: 10, rest: 60 },
+    { id: "pushup" as const, sets: 3, reps: 8, rest: 60 },
   ],
 };
 
@@ -154,6 +155,6 @@ describe("applyProfessionalProgression", () => {
   it("ejercicios sin carga (pushup) no se modifican", () => {
     const result = applyProfessionalProgression(workoutWithLoadable, 2, profileM);
     const pushup = result.exercises.find((e) => e.id === "pushup");
-    expect(pushup.loadKg).toBeUndefined();
+    expect(pushup?.loadKg).toBeUndefined();
   });
 });

@@ -1,4 +1,6 @@
-export const MEAL_WEEKLY_TEMPLATES = {
+import type { Goal, MealWeek } from "../types";
+
+export const MEAL_WEEKLY_TEMPLATES: Record<Goal, MealWeek[]> = {
   fuerza: [
     {
       title: "Semana 1 - Fuerza base",
@@ -165,7 +167,7 @@ export const MEAL_WEEKLY_TEMPLATES = {
   ],
 };
 
-export const HEALTHY_EXTRA_WEEK = {
+export const HEALTHY_EXTRA_WEEK: MealWeek = {
   title: "Semana 4 - Saludable integral",
   type: "vegana",
   days: [
@@ -179,12 +181,12 @@ export const HEALTHY_EXTRA_WEEK = {
   ],
 };
 
-export const getWeeklyMealExamples = (goal) => {
-  const base = MEAL_WEEKLY_TEMPLATES[goal] || MEAL_WEEKLY_TEMPLATES.fuerza;
+export const getWeeklyMealExamples = (goal?: Goal | string): MealWeek[] => {
+  const base = MEAL_WEEKLY_TEMPLATES[(goal as Goal)] || MEAL_WEEKLY_TEMPLATES.fuerza;
   return [...base, HEALTHY_EXTRA_WEEK];
 };
 
-export const adaptMealWeekByCalories = (week, calories) => {
+export const adaptMealWeekByCalories = (week: MealWeek, calories: number): MealWeek & { calorieLabel: string } => {
   const tier = calories < 1900 ? "low" : calories > 2600 ? "high" : "mid";
   const adjustments = {
     low: {

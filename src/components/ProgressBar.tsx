@@ -1,6 +1,14 @@
 import React from "react";
 
-export function ProgressBar({ value, max, color = "#c8ff00", height = 6, trackColor = "#1e1e2e" }) {
+interface ProgressBarProps {
+  value: number;
+  max: number;
+  color?: string;
+  height?: number;
+  trackColor?: string;
+}
+
+export function ProgressBar({ value, max, color = "#c8ff00", height = 6, trackColor = "#1e1e2e" }: ProgressBarProps) {
   return (
     <div style={{ background: trackColor, borderRadius: 99, height, overflow: "hidden" }}>
       <div

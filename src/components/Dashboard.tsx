@@ -1,18 +1,42 @@
-import React, { useState, useEffect } from "react";
-import { S } from "../theme/styles.js";
-import { EXDB, PLANS, WEEK_DAYS, DAY_STATE_ORDER, DAY_STATE_META, DAY_STATE_META_LIGHT } from "../domain/data.js";
-import { buildObjective, buildNutritionPlan } from "../domain/planning.js";
-import { getWeeklyMealExamples, adaptMealWeekByCalories } from "../domain/mealData.js";
-import { ProgressBar } from "./ProgressBar.jsx";
+import React, { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
+import { S } from "../theme/styles";
+import { EXDB, WEEK_DAYS, DAY_STATE_ORDER, DAY_STATE_META, DAY_STATE_META_LIGHT, getPlanForGoalAndLevel } from "../domain/data";
+import { buildObjective, buildNutritionPlan } from "../domain/planning";
+import { getWeeklyMealExamples, adaptMealWeekByCalories } from "../domain/mealData";
+import { ProgressBar } from "./ProgressBar";
+import { exportAppData, importAppData } from "../storage/appStorage";
+import { requestNotificationPermission, scheduleWorkoutReminder } from "../storage/notifications";
+import type { UserProfile, WorkoutResult, Workout, WeeklyCalendar, DayKey, ThemeMode, ExerciseId, AppState } from "../types";
+
+interface DashboardProps {
+  user: UserProfile;
+  history: WorkoutResult[];
+  profiles: UserProfile[];
+  activeProfileId: string | null;
+  onSwitchProfile: (id: string) => void;
+  onAddProfile: () => void;
+  onEditProfile: () => void;
+  onDeleteProfile: () => void;
+  onStartWorkout: (w: Workout, level: number) => void;
+  weeklyCalendar: WeeklyCalendar;
+  onCycleDayState: (dayKey: DayKey) => void;
+  themeMode: ThemeMode;
+  savedExtraIds?: ExerciseId[];
+  onRemoveSavedExtra: (id: ExerciseId) => void;
+  onClearSavedExtras: () => void;
+  onImportData?: (state: AppState) => void;
+}
 
 export function Dashboard({
   user, history, profiles, activeProfileId,
   onSwitchProfile, onAddProfile, onEditProfile, onDeleteProfile,
   onStartWorkout, weeklyCalendar, onCycleDayState, themeMode,
-  savedExtraIds = [], onRemoveSavedExtra, onClearSavedExtras,
-}) {
+  savedExtraIds = [], onRemoveSavedExtra, onClearSavedExtras, onImportData,
+}: DashboardProps) {
   const [mealWeekIdx, setMealWeekIdx] = useState(0);
   const [veganOnly, setVeganOnly] = useState(user?.dietPreference === "vegana");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const dashboardAccent = themeMode === "light" ? "#2b6500" : S.accent;
   const totalWorkouts = history.length;
   const totalCals = history.reduce((s, e) => s + e.calories, 0);
@@ -26,7 +50,7 @@ export function Dashboard({
     return s;
   })();
   const currentLevel = Math.min(2, Math.floor(totalWorkouts / 12));
-  const plan = PLANS[currentLevel];
+  const plan = getPlanForGoalAndLevel(user.goal, currentLevel) ?? getPlanForGoalAndLevel("fuerza", 0)!;
   const objective = buildObjective(user, currentLevel);
   const nutrition = buildNutritionPlan(user, currentLevel, totalWorkouts);
   const allMealWeeks = getWeeklyMealExamples(user?.goal);
@@ -53,6 +77,36 @@ export function Dashboard({
           <button onClick={onAddProfile} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>+ Perfil</button>
           <button onClick={onEditProfile} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Editar</button>
           <button onClick={onDeleteProfile} style={{ ...S.btn("var(--surface-soft)","#d94a4a"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Eliminar</button>
+          <button onClick={async()=>{
+            const json=await exportAppData();
+            const blob=new Blob([json],{type:"application/json"});
+            const url=URL.createObjectURL(blob);
+            const a=document.createElement("a");
+            a.href=url;a.download=`irontrack-backup-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();URL.revokeObjectURL(url);
+          }} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Exportar</button>
+          <button onClick={()=>fileInputRef.current?.click()} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Importar</button>
+          <button onClick={async()=>{
+            const ok=await requestNotificationPermission();
+            if(ok){ scheduleWorkoutReminder(18,0); toast.success("Recordatorio de entrenamiento activado (18:00)"); }
+            else toast.error("Permisos de notificación denegados");
+          }} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>🔔 Recordatorio</button>
+          <input ref={fileInputRef} type="file" accept=".json" style={{display:"none"}} onChange={e=>{
+            const file=e.target.files?.[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=async()=>{
+              try{
+                const state=await importAppData(reader.result as string);
+                onImportData?.(state);
+                toast.success("Datos importados correctamente");
+              }catch(err){
+                toast.error("Error al importar: "+(err instanceof Error?err.message:String(err)));
+              }
+            };
+            reader.readAsText(file);
+            e.target.value="";
+          }}/>
         </div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:24 }}>

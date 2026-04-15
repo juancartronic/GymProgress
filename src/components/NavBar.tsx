@@ -1,40 +1,48 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
-const NAV_ITEMS = [
-  { id: "dashboard", label: "Inicio", icon: "◉" },
-  { id: "plans", label: "Planes", icon: "☰" },
-  { id: "history", label: "Historial", icon: "◷" },
+const NAV_ITEMS: Array<{ to: string; label: string; icon: string }> = [
+  { to: "/dashboard", label: "Inicio", icon: "◉" },
+  { to: "/plans", label: "Planes", icon: "☰" },
+  { to: "/history", label: "Historial", icon: "◷" },
 ];
 
-export function NavBar({ screen, setScreen, hasUser, accent, muted }) {
+interface NavBarProps {
+  hasUser: boolean;
+  accent: string;
+  muted: string;
+}
+
+export function NavBar({ hasUser, accent, muted }: NavBarProps) {
   if (!hasUser) return null;
 
   return (
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--nav-bg)", borderTop: "1px solid var(--border-main)", display: "flex", zIndex: 99 }}>
       {NAV_ITEMS.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setScreen(item.id)}
-          style={{
+        <NavLink
+          key={item.to}
+          to={item.to}
+          style={({ isActive }) => ({
             flex: 1,
             background: "none",
             border: "none",
             padding: "12px 0",
             cursor: "pointer",
-            color: screen === item.id ? accent : muted,
+            color: isActive ? accent : muted,
             fontFamily: "'DM Sans',sans-serif",
             fontSize: 11,
-            fontWeight: screen === item.id ? 600 : 400,
+            fontWeight: isActive ? 600 : 400,
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "column" as const,
             alignItems: "center",
             gap: 4,
             transition: "color .15s",
-          }}
+            textDecoration: "none",
+          })}
         >
           <span style={{ fontSize: 20 }}>{item.icon}</span>
           {item.label}
-        </button>
+        </NavLink>
       ))}
     </div>
   );

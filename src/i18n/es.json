@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "IRON TRACK",
+    "subtitle": "Tu entrenamiento. Tu progreso."
+  },
+  "nav": {
+    "home": "Inicio",
+    "plans": "Planes",
+    "history": "Historial"
+  },
+  "onboarding": {
+    "createProfile": "Crear perfil",
+    "editProfile": "Editar perfil",
+    "tellUs": "Cuentanos sobre ti",
+    "name": "Nombre",
+    "namePlaceholder": "Como te llamas?",
+    "weight": "Peso (kg)",
+    "height": "Altura (cm)",
+    "bodyFat": "Grasa corporal (%)",
+    "age": "Edad",
+    "sex": "Sexo biologico",
+    "male": "masculino",
+    "female": "femenino",
+    "goal": "Objetivo",
+    "diet": "Preferencia alimentaria",
+    "start": "EMPEZAR MI CAMINO",
+    "save": "Guardar cambios",
+    "back": "← Volver"
+  },
+  "dashboard": {
+    "hello": "Hola,",
+    "workouts": "Entrenos",
+    "streak": "Racha",
+    "kcal": "Kcal",
+    "addProfile": "+ Perfil",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "export": "Exportar",
+    "import": "Importar",
+    "confirmDelete": "¿Eliminar el perfil {{name}}? Esta accion borrara su historial y calendario."
+  },
+  "workout": {
+    "start": "Empezar entrenamiento",
+    "finish": "Finalizar",
+    "cancel": "Cancelar",
+    "completed": "¡Entrenamiento completado!",
+    "rest": "Descanso",
+    "sets": "Series",
+    "reps": "Repeticiones"
+  },
+  "toast": {
+    "profileCreated": "Perfil creado",
+    "profileUpdated": "Perfil actualizado",
+    "profileDeleted": "Perfil eliminado",
+    "workoutDone": "¡Entrenamiento completado!",
+    "importSuccess": "Datos importados correctamente",
+    "importError": "Error al importar"
+  },
+  "theme": {
+    "switchToLight": "Cambiar a modo dia",
+    "switchToDark": "Cambiar a modo noche",
+    "light": "Modo dia",
+    "dark": "Modo noche"
+  }
+}

@@ -1,30 +1,41 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { S } from "../theme/styles.js";
-import { EXDB } from "../domain/data.js";
-import { applyProfessionalProgression } from "../domain/workout.js";
-import { ILLUS } from "./Illustrations.jsx";
+import { S } from "../theme/styles";
+import { EXDB } from "../domain/data";
+import { applyProfessionalProgression } from "../domain/workout";
+import { ILLUS } from "./Illustrations";
+import type { Workout, WorkoutExercise, ExerciseId, UserProfile } from "../types";
 
-export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, savedExtraIds = [], onSaveExtraIds }) {
+interface WorkoutDemoProps {
+  workout: Workout;
+  planLevel: number;
+  onStartNow: (customWorkout?: Workout) => void;
+  onBack: () => void;
+  user: UserProfile;
+  savedExtraIds?: ExerciseId[];
+  onSaveExtraIds?: (ids: ExerciseId[]) => void;
+}
+
+export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, savedExtraIds = [], onSaveExtraIds }: WorkoutDemoProps) {
   const [left, setLeft] = useState(30);
   const [idx, setIdx] = useState(0);
-  const [selectedExtraId, setSelectedExtraId] = useState("squat");
-  const [extraExercises, setExtraExercises] = useState([]);
+  const [selectedExtraId, setSelectedExtraId] = useState<ExerciseId>("squat");
+  const [extraExercises, setExtraExercises] = useState<WorkoutExercise[]>([]);
   const startedRef = useRef(false);
 
-  const buildExtraExercise = useCallback((id) => {
-    const byExercise = {
+  const buildExtraExercise = useCallback((id: ExerciseId): WorkoutExercise => {
+    const byExercise: Partial<Record<ExerciseId, Omit<WorkoutExercise, "id">>> = {
       plank: { sets:3, reps:30, rest:45, isTime:true },
       burpee: { sets:3, reps:10, rest:60 },
       jumpingjack: { sets:3, reps:30, rest:30 },
       mtnclimber: { sets:3, reps:24, rest:45 },
     };
     const defaults = byExercise[id] || { sets:3, reps:12, rest:45 };
-    return { id, ...defaults, custom:true };
+    return { id, ...defaults, custom:true } as WorkoutExercise;
   }, []);
 
   useEffect(() => {
-    const normalized = (savedExtraIds || []).filter(id => EXDB[id]);
-    setExtraExercises(normalized.map(id => buildExtraExercise(id)));
+    const normalized = (savedExtraIds || []).filter(id => EXDB[id as keyof typeof EXDB]);
+    setExtraExercises(normalized.map(id => buildExtraExercise(id as ExerciseId)));
   }, [savedExtraIds, buildExtraExercise]);
 
   const workoutWithExtras = useMemo(
@@ -85,10 +96,10 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
         <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
           <select
             value={selectedExtraId}
-            onChange={e => setSelectedExtraId(e.target.value)}
+            onChange={e => setSelectedExtraId(e.target.value as ExerciseId)}
             style={{ background:"var(--input-bg)", border:"1px solid var(--input-border)", color:"var(--text-main)", borderRadius:10, padding:"9px 10px", fontFamily:"'DM Sans',sans-serif", fontSize:12, minWidth:180 }}
           >
-            {Object.entries(EXDB).map(([id, info]) => (
+            {(Object.entries(EXDB) as [ExerciseId, { name: string }][]).map(([id, info]) => (
               <option key={id} value={id}>{info.name}</option>
             ))}
           </select>

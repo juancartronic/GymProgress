@@ -1,6 +1,8 @@
 import { DIFFICULTY, EXDB, LOADABLE_EX } from "./data";
+import type { Workout, WorkoutExercise, DifficultyKey, UserProfile } from "../types";
 
-export const applyProfessionalProgression = (workout, planLevel, user) => {
+/** Adjusts exercise loads and adds professional notes for intermediate/advanced plan levels. */
+export const applyProfessionalProgression = (workout: Workout, planLevel: number, user?: Partial<UserProfile> | null): Workout => {
   const levelKey = planLevel === 1 ? "intermedio" : planLevel >= 2 ? "avanzado" : null;
   if (!levelKey) return workout;
   const sexAdj = user?.gender === "femenino" ? 0.85 : 1;
@@ -17,7 +19,8 @@ export const applyProfessionalProgression = (workout, planLevel, user) => {
   };
 };
 
-export const scaleWorkout = (workout, difficulty) => {
+/** Scales workout sets, reps, and rest times by difficulty multipliers. */
+export const scaleWorkout = (workout: Workout, difficulty: DifficultyKey): Workout => {
   const d = DIFFICULTY[difficulty] || DIFFICULTY.normal;
   return {
     ...workout,
@@ -30,7 +33,8 @@ export const scaleWorkout = (workout, difficulty) => {
   };
 };
 
-export const calcCalories = (exercises, profile, totalMinutes) => {
+/** Estimates calories burned using average MET, BMR, and workout duration. */
+export const calcCalories = (exercises: WorkoutExercise[], profile: Partial<UserProfile> | null | undefined, totalMinutes: number): number => {
   const weightKg = Number(profile?.weight) || 70;
   const heightCm = Number(profile?.height) || 170;
   const age = Number(profile?.age) || 30;
@@ -44,9 +48,11 @@ export const calcCalories = (exercises, profile, totalMinutes) => {
   return Math.round(avgMet * basePerMin * totalMinutes);
 };
 
-export const exLoad = (ex) => (ex?.sets || 0) * (ex?.reps || 0);
+/** Calculates total exercise load (sets × reps). */
+export const exLoad = (ex: Pick<WorkoutExercise, 'sets' | 'reps'> | null | undefined): number => (ex?.sets || 0) * (ex?.reps || 0);
 
-export const weekStartIso = (iso) => {
+/** Returns the ISO date string (YYYY-MM-DD) for the Monday of the given date's week. */
+export const weekStartIso = (iso: string): string => {
   const d = new Date(iso);
   const day = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() - day);
@@ -54,6 +60,8 @@ export const weekStartIso = (iso) => {
   return d.toISOString().slice(0, 10);
 };
 
-export const fmtDate = (iso) => new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+/** Formats an ISO date string as a localized Spanish date (e.g. "15 abr 2026"). */
+export const fmtDate = (iso: string): string => new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 
-export const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+/** Formats seconds as MM:SS. */
+export const fmtTime = (s: number): string => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
