@@ -185,7 +185,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
           <span style={{ fontSize:11, color:S.muted, textTransform:"uppercase", letterSpacing:"0.08em" }}>Dificultad del entrenamiento</span>
           <span style={{ fontSize:11, color:lockDifficulty ? S.orange : S.muted }}>{lockDifficulty ? "bloqueada en progreso" : "editable antes de iniciar"}</span>
         </div>
-        <div style={{ display:"flex", gap:8 }}>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           {(Object.entries(DIFFICULTY) as [DifficultyKey, { label: string }][]).map(([k, v]) => (
             <button key={k} disabled={lockDifficulty} onClick={() => setDifficulty(k)}
               style={{ ...S.btn(difficulty === k ? S.accent : "var(--inactive-btn-bg)", difficulty === k ? "#080810" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:`1px solid ${difficulty === k ? S.accent : "var(--border-main)"}`, opacity:lockDifficulty && difficulty !== k ? 0.5 : 1 }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { S } from "../theme/styles";
 import { EXDB, WEEK_DAYS, DAY_STATE_ORDER, DAY_STATE_META, DAY_STATE_META_LIGHT, getPlanForGoalAndLevel } from "../domain/data";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { buildObjective, buildNutritionPlan } from "../domain/planning";
 import { getWeeklyMealExamples, adaptMealWeekByCalories } from "../domain/mealData";
 import { ProgressBar } from "./ProgressBar";
@@ -34,6 +35,7 @@ export function Dashboard({
   onStartWorkout, weeklyCalendar, onCycleDayState, themeMode,
   savedExtraIds = [], onRemoveSavedExtra, onClearSavedExtras, onImportData,
 }: DashboardProps) {
+  const isMobile = useIsMobile();
   const [mealWeekIdx, setMealWeekIdx] = useState(0);
   const [veganOnly, setVeganOnly] = useState(user?.dietPreference === "vegana");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -109,11 +111,11 @@ export function Dashboard({
           }}/>
         </div>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:24 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: isMobile ? 6 : 10, marginBottom:24 }}>
         {[{ label:"Entrenos", value:totalWorkouts }, { label:"Racha", value:`${streak}d` }, { label:"Kcal", value:totalCals > 999 ? `${(totalCals/1000).toFixed(1)}k` : totalCals }].map(s => (
-          <div key={s.label} style={{ ...S.card, padding:"16px 12px", textAlign:"center" }}>
-            <div style={{ ...S.heading, fontSize:28, color:S.accent, lineHeight:1 }}>{s.value}</div>
-            <div style={{ fontSize:11, color:S.muted, marginTop:4 }}>{s.label}</div>
+          <div key={s.label} style={{ ...S.card, padding: isMobile ? "12px 6px" : "16px 12px", textAlign:"center" }}>
+            <div style={{ ...S.heading, fontSize: isMobile ? 22 : 28, color:S.accent, lineHeight:1 }}>{s.value}</div>
+            <div style={{ fontSize: isMobile ? 10 : 11, color:S.muted, marginTop:4 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -156,36 +158,36 @@ export function Dashboard({
           <span style={{ fontSize:12, color:"var(--text-muted)" }}>{nutrition.calories} kcal/dia</span>
         </div>
         <p style={{ fontSize:12, color:"var(--text-muted)", margin:"0 0 8px" }}>{nutrition.focus}</p>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:8 }}>
-          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:"var(--data-val)" }}>{nutrition.protein}g</div>
-            <div style={{ fontSize:10, color:S.muted }}>Proteina</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: isMobile ? 4 : 8, marginBottom:8 }}>
+          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding: isMobile ? "8px 4px" : "8px 6px", textAlign:"center" }}>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize: isMobile ? 12 : 14, color:"var(--data-val)" }}>{nutrition.protein}g</div>
+            <div style={{ fontSize: isMobile ? 9 : 10, color:S.muted }}>Proteina</div>
           </div>
-          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:"var(--data-val)" }}>{nutrition.carbs}g</div>
-            <div style={{ fontSize:10, color:S.muted }}>Carbohidratos</div>
+          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding: isMobile ? "8px 4px" : "8px 6px", textAlign:"center" }}>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize: isMobile ? 12 : 14, color:"var(--data-val)" }}>{nutrition.carbs}g</div>
+            <div style={{ fontSize: isMobile ? 9 : 10, color:S.muted }}>Carbohidratos</div>
           </div>
-          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding:"8px 6px", textAlign:"center" }}>
+          <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding: isMobile ? "8px 4px" : "8px 6px", textAlign:"center" }}>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:"var(--data-val)" }}>{nutrition.fats}g</div>
             <div style={{ fontSize:10, color:S.muted }}>Grasas</div>
           </div>
         </div>
         <p style={{ fontSize:11, color:S.muted, margin:0 }}>Hidratacion objetivo: {nutrition.hydration} ml/dia (aprox.).</p>
       </div>
-      <div style={{ ...S.card, marginBottom:20, background:"var(--card-cal-bg)", border:"1px solid #50d0b030" }}>
+      <div style={{ ...S.card, marginBottom:20, padding: isMobile ? "14px 10px" : "20px", background:"var(--card-cal-bg)", border:"1px solid #50d0b030" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
           <span style={S.pill("#50d0b0")}>CALENDARIO SEMANAL</span>
           <span style={{ fontSize:11, color:S.muted }}>Click para cambiar estado</span>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:6 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap: isMobile ? 3 : 6 }}>
           {WEEK_DAYS.map(d => {
             const state = weeklyCalendar?.[d.key] || "descanso";
             const meta = (themeMode === "light" ? DAY_STATE_META_LIGHT : DAY_STATE_META)[state];
             return (
               <button key={d.key} onClick={() => onCycleDayState(d.key)}
-                style={{ border:`1px solid ${meta.border}`, background:meta.bg, color:meta.fg, borderRadius:10, padding:"8px 4px", fontFamily:"'DM Sans',sans-serif", cursor:"pointer" }}>
-                <div style={{ fontSize:11, fontWeight:700 }}>{d.label}</div>
-                <div style={{ fontSize:9, marginTop:2 }}>{meta.label}</div>
+                style={{ border:`1px solid ${meta.border}`, background:meta.bg, color:meta.fg, borderRadius: isMobile ? 8 : 10, padding: isMobile ? "6px 2px" : "8px 4px", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", minWidth:0, overflow:"hidden" }}>
+                <div style={{ fontSize: isMobile ? 10 : 11, fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{d.label}</div>
+                <div style={{ fontSize: isMobile ? 7 : 9, marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{meta.label}</div>
               </button>
             );
           })}

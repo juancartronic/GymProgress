@@ -43,8 +43,8 @@ export function History({ history, user }: HistoryProps) {
             { label:"Minutos", value: totalMins },
             { label:"Entrenos", value: history.length },
           ].map(s => (
-            <div key={s.label} style={{ ...S.card, textAlign:"center", padding:"14px 8px" }}>
-              <div style={{ ...S.heading, fontSize:26, color:S.accent, lineHeight:1 }}>{s.value}</div>
+            <div key={s.label} style={{ ...S.card, textAlign:"center", padding:"14px 6px", minWidth:0, overflow:"hidden" }}>
+              <div style={{ ...S.heading, fontSize:"clamp(18px, 6vw, 26px)", color:S.accent, lineHeight:1 }}>{s.value}</div>
               <div style={{ fontSize:10, color:S.muted, marginTop:3 }}>{s.label}</div>
             </div>
           ))}

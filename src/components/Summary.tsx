@@ -19,12 +19,12 @@ export function Summary({ result, user, onContinue }: SummaryProps) {
         <p style={{ color:S.muted, margin:0 }}>{workout.focus} - {getLevelName(planLevel)} - {DIFFICULTY[difficulty]?.label || "Normal"}</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:24 }}>
-        <div style={{ ...S.card, textAlign:"center", padding:"28px 12px", background:"var(--card-plan-bg)" }}>
-          <div style={{ ...S.heading, fontSize:56, color:S.accent, lineHeight:1 }}>{calories}</div>
+        <div style={{ ...S.card, textAlign:"center", padding:"28px 12px", background:"var(--card-plan-bg)", overflow:"hidden" }}>
+          <div style={{ ...S.heading, fontSize:"clamp(32px, 10vw, 56px)", color:S.accent, lineHeight:1 }}>{calories}</div>
           <div style={{ fontSize:13, color:S.muted, marginTop:4 }}>kcal estimadas</div>
         </div>
-        <div style={{ ...S.card, textAlign:"center", padding:"28px 12px" }}>
-          <div style={{ ...S.heading, fontSize:56, lineHeight:1 }}>{duration}</div>
+        <div style={{ ...S.card, textAlign:"center", padding:"28px 12px", overflow:"hidden" }}>
+          <div style={{ ...S.heading, fontSize:"clamp(32px, 10vw, 56px)", lineHeight:1 }}>{duration}</div>
           <div style={{ fontSize:13, color:S.muted, marginTop:4 }}>minutos</div>
         </div>
       </div>
