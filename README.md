@@ -1,83 +1,250 @@
-# Gym Progress App
+# IronTrack — Gym Progress App
 
-Aplicacion web de entrenamiento personal hecha con React + Vite.
+Aplicación web PWA de entrenamiento personal construida con React 18 + TypeScript + Vite. Diseñada como mobile-first, instalable en dispositivos, con soporte offline.
 
-Incluye:
-- Onboarding y edicion de perfil
-- Multiperfil con historial independiente
-- Planes por nivel (principiante/intermedio/avanzado)
-- Demo visual de ejercicios y rutina activa con temporizadores
-- Resumen de sesion y historial
-- Objetivo fisico, nutricion y dieta semanal ejemplo
-- Calendario semanal de estados
-- Tema dia/noche con persistencia
+## Características principales
 
-## 1. Stack y estructura
+- **Multiusuario** — perfiles independientes con historial, calendario y configuración propios.
+- **Planes de entrenamiento** — 4 objetivos (fuerza, cardio, pérdida, tono) × 3 niveles (principiante, intermedio, avanzado), con progresión semanal automática de carga y repeticiones.
+- **Rutina activa** — temporizadores de sets y descansos, dificultad configurable, vibración y sonido opcionales.
+- **Demo visual** — animaciones SVG de cada ejercicio antes de entrenar.
+- **Nutrición personalizada** — cálculo de TDEE, macros (proteína, carbos, grasas), hidratación diaria y menú semanal según objetivo y dieta (general / vegana).
+- **Snack del día** — recomendación de snack pre/post entrenamiento según tipo de estímulo dominante del plan.
+- **Lista de compra semanal** — agrega ingredientes por categoría con cantidades totales en gramos/kg, copiable al portapapeles.
+- **Historial y peso** — gráfica de evolución de peso y registro de sesiones anteriores.
+- **Calendario semanal** — marca días de entrenamiento, recuperación y descanso.
+- **Recordatorio diario** — notificación push a la hora elegida (requiere permiso de notificaciones).
+- **Tema día/noche** — persiste entre sesiones.
+- **Exportar / Importar** — backup cifrado del estado completo (AES-256-GCM).
+- **i18n** — soporte español/inglés, idioma por defecto: español.
 
-## Stack
-- React 18
-- Vite 5
-- JavaScript (un solo archivo de dominio principal)
+---
 
-## Archivos principales
-- `GymProgressApp.jsx`: logica completa de negocio y UI
-- `src/main.jsx`: bootstrap, error boundary y carga dinamica de la app
-- `package.json`: scripts y dependencias
+## Stack tecnológico
 
-## Scripts
-- `npm run dev`: entorno local
-- `npm run build`: build de produccion
-- `npm run preview`: preview del build
+| Capa | Tecnología |
+|---|---|
+| UI | React 18, TypeScript |
+| Build | Vite 5 |
+| PWA | vite-plugin-pwa (Workbox) |
+| Estado | React Context + useReducer |
+| Formularios | react-hook-form + Zod |
+| Animaciones | Framer Motion |
+| Gráficas | Recharts |
+| Notificaciones | react-hot-toast |
+| i18n | i18next + react-i18next |
+| Tests | Vitest + Testing Library |
+| Linting | ESLint + Prettier |
 
-## 2. Flujo de pantallas
+---
 
-La app usa una maquina de estados simple con `screen`:
-- `onboarding`: creacion inicial de perfil
-- `profile-form`: editar/crear perfil desde dashboard
-- `dashboard`: pantalla principal con progreso, objetivo, nutricion y dieta
-- `plans`: lista de planes y dias de entrenamiento
-- `demo`: previsualizacion corta del entrenamiento
-- `active`: sesion activa por sets/reps y descansos
-- `summary`: resultado al finalizar
-- `history`: historial de entrenamientos
+## Estructura de directorios
 
-Transiciones relevantes:
-- Onboarding valido -> Dashboard
-- Dashboard/Plans -> Demo -> Active -> Summary -> Dashboard
-- Dashboard -> Profile Form -> Dashboard
+```
+src/
+├── main.tsx                 # Bootstrap, AppProvider, error boundary
+├── types.ts                 # Todos los tipos e interfaces TypeScript
+├── components/
+│   ├── Dashboard.tsx        # Pantalla principal (objetivo, nutrición, dieta, peso)
+│   ├── ActiveWorkout.tsx    # Sesión activa con sets/reps y temporizadores
+│   ├── PlansView.tsx        # Selección de plan y días de entrenamiento
+│   ├── WorkoutDemo.tsx      # Preview SVG animado de ejercicios
+│   ├── Summary.tsx          # Resumen al finalizar sesión
+│   ├── History.tsx          # Historial + gráfica de peso
+│   ├── Onboarding.tsx       # Creación / edición de perfil
+│   ├── NavBar.tsx           # Barra de navegación inferior
+│   ├── Illustrations.tsx    # Ilustraciones SVG por objetivo
+│   ├── PageTransition.tsx   # Animaciones de transición entre pantallas
+│   ├── ProgressBar.tsx      # Barra de progreso reutilizable
+│   └── Skeleton.tsx         # Placeholder de carga
+├── domain/
+│   ├── data.ts              # Ejercicios, planes y calendario por defecto
+│   ├── workout.ts           # Lógica de sesión activa y progresión de carga
+│   ├── planning.ts          # Cálculo de TDEE, macros e hidratación
+│   ├── mealData.ts          # Menús semanales, snacks y lista de compra
+│   └── __tests__/           # Tests unitarios de dominio
+├── state/
+│   ├── AppContext.tsx        # Context + hooks useAppState / useAppDispatch
+│   └── appReducer.ts        # Reducer centralizado con todas las acciones
+├── storage/
+│   ├── appStorage.ts        # Lectura/escritura en window.storage con migración legacy
+│   ├── crypto.ts            # Cifrado AES-256-GCM para exportar/importar datos
+│   └── notifications.ts     # Gestión de permisos y recordatorio diario
+├── hooks/
+│   └── useIsMobile.ts       # Detecta viewport mobile
+├── i18n/
+│   ├── es.json              # Traducciones español
+│   ├── en.json              # Traducciones inglés
+│   └── index.ts             # Configuración i18next
+└── theme/
+    ├── tokens.ts            # Variables de color por tema (dark/light)
+    ├── styles.ts            # Helpers de estilos inline reutilizables
+    └── fonts.ts             # Tipografías
+```
 
-## 3. Modelo de datos
+---
 
-## Perfil
-Cada perfil contiene:
-- `id`
-- `name`
-- `weight`
-- `height`
-- `bodyFat`
-- `age`
-- `gender`
-- `goal`
-- `dietPreference`
+## Scripts disponibles
 
-## Historial por perfil
-`historyByProfile[profileId]` guarda un array de sesiones con:
-- fecha
-- duracion
-- calorias
-- dificultad
-- workout (estructura del entrenamiento)
-- progreso de sets completados
+```bash
+npm run dev          # Servidor de desarrollo (localhost:5173)
+npm run build        # Build de producción en /dist
+npm run preview      # Preview local del build
+npm run test         # Ejecuta todos los tests (Vitest)
+npm run test:watch   # Tests en modo watch
+npm run lint         # ESLint (0 warnings tolerados)
+npm run format       # Prettier sobre src/**/*.{ts,tsx}
+```
 
-## Calendario por perfil
-`weeklyCalendarByProfile[profileId]` guarda el estado por dia:
-- `entreno`
-- `recuperacion`
-- `descanso`
+---
 
-## 4. Persistencia
+## Flujo de pantallas
 
-La app persiste en `window.storage`.
+```
+Onboarding ──────────────────────────┐
+                                      ↓
+                                  Dashboard ←──────────────────┐
+                                      │                         │
+                              ┌───────┴───────┐                 │
+                              ↓               ↓                 │
+                           Plans           History              │
+                              │                                  │
+                              ↓                                  │
+                            Demo                                 │
+                              │                                  │
+                              ↓                                  │
+                           Active                                │
+                              │                                  │
+                              ↓                                  │
+                           Summary ──────────────────────────────┘
+```
+
+| Pantalla | `Screen` key | Descripción |
+|---|---|---|
+| Onboarding | `onboarding` | Crear o editar perfil de usuario |
+| Dashboard | `dashboard` | Resumen, nutrición, dieta y peso |
+| Planes | `plans` | Selección de plan y días |
+| Demo | `demo` | Preview animado del entrenamiento |
+| Activo | `active` | Sesión con cronómetro y sets |
+| Resumen | `summary` | Resultado al finalizar |
+| Historial | `history` | Sesiones pasadas y gráfica de peso |
+
+---
+
+## Modelo de datos principal
+
+### `UserProfile`
+```typescript
+{
+  id: string;
+  name: string;
+  weight: number;           // kg
+  height: number;           // cm
+  waistCm?: number | "";
+  bodyFat: number | "";     // %
+  age: number;
+  gender: "masculino" | "femenino";
+  goal: "fuerza" | "cardio" | "perdida" | "tono";
+  dietPreference: "general" | "vegana";
+}
+```
+
+### `WorkoutResult` (sesión guardada)
+```typescript
+{
+  workout: Workout;
+  planLevel: number;
+  difficulty: "ligero" | "normal" | "intenso";
+  duration: number;         // segundos
+  calories: number;
+  date: string;             // ISO
+}
+```
+
+### `NutritionPlan` (calculado en planning.ts)
+```typescript
+{
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  hydration: number;        // ml/día
+  dominantStimulus: "fuerza" | "cardio" | "mixto";
+  focus: string;
+}
+```
+
+### `WeeklyShoppingItem` (lista de compra)
+```typescript
+{
+  name: string;
+  totalGrams: number;
+  totalKcal: number;
+  appearances: number;
+  category: ShoppingCategory; // "Proteínas animales" | "Lácteos y huevos" | ...
+}
+```
+
+---
+
+## Estado global (`AppReducerState`)
+
+```typescript
+{
+  profiles: UserProfile[];
+  activeProfileId: string | null;
+  historyByProfile:        Record<string, WorkoutResult[]>;
+  weeklyCalendarByProfile: Record<string, WeeklyCalendar>;
+  customExercisesByProfile: Record<string, ExerciseId[]>;
+  weightLogByProfile:      Record<string, WeightEntry[]>;
+  activeWorkout: ActiveWorkoutState | null;
+  workoutResult: WorkoutResult | null;
+  themeMode: "dark" | "light";
+}
+```
+
+---
+
+## Persistencia y seguridad
+
+- Los datos se guardan en `window.storage` con las claves `irontrack-*`.
+- La migración desde el formato legacy (perfil único) se realiza automáticamente en `appStorage.ts`.
+- La exportación de datos usa **AES-256-GCM** con clave derivada por **PBKDF2** (100 000 iteraciones, SHA-256) — ver `src/storage/crypto.ts`.
+
+---
+
+## Nutrición y dieta
+
+La función `buildNutritionPlan` en `planning.ts` calcula:
+
+1. **TDEE** (Harris-Benedict + factor actividad según objetivo y nivel del plan)
+2. **Macros** según `dominantStimulus` (fuerza → +proteína; cardio → +carbos; mixto → equilibrado)
+3. **Hidratación** = `peso × 35 ml + (minutos semanales / 7) × 12 ml + ratio HIIT × 350 ml`
+
+El menú semanal (`mealData.ts`) genera 7 días con slots (desayuno, almuerzo, merienda, cena) adaptados al objetivo y preferencia dietética.
+
+---
+
+## Tests
+
+```bash
+npm run test
+```
+
+Cobertura en:
+- `src/domain/__tests__/planning.test.ts` — cálculos de TDEE y macros
+- `src/domain/__tests__/workout.test.ts` — progresión de carga
+- `src/components/__tests__/` — componentes NavBar, Onboarding, ProgressBar
+
+---
+
+## Despliegue
+
+La app está configurada para **Vercel** (`vercel.json`) con rewrite de rutas al `index.html`. El build genera un Service Worker (Workbox) para funcionamiento offline e instalación como PWA.
+
+```bash
+npm run build   # → dist/
+```
 Si no existe (entorno browser normal), se crea un wrapper sobre `localStorage` en `src/main.jsx`.
 
 ## Claves actuales
