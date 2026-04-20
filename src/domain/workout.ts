@@ -1,19 +1,24 @@
 import { DIFFICULTY, EXDB, LOADABLE_EX } from "./data";
 import type { Workout, WorkoutExercise, DifficultyKey, UserProfile } from "../types";
 
-/** Adjusts exercise loads and adds professional notes for intermediate/advanced plan levels. */
-export const applyProfessionalProgression = (workout: Workout, planLevel: number, user?: Partial<UserProfile> | null): Workout => {
+/** Adjusts exercise loads and adds professional notes for intermediate/advanced plan levels.
+ *  Also applies weekly progressive overload: each week adds ~2.5% more load/reps.
+ */
+export const applyProfessionalProgression = (workout: Workout, planLevel: number, user?: Partial<UserProfile> | null, weekInBlock = 1): Workout => {
   const levelKey = planLevel === 1 ? "intermedio" : planLevel >= 2 ? "avanzado" : null;
   if (!levelKey) return workout;
   const sexAdj = user?.gender === "femenino" ? 0.85 : 1;
+  // Progressive overload: +2.5% per week, cap at +15% (week 7 onward)
+  const weekFactor = 1 + Math.min((weekInBlock - 1) * 0.025, 0.15);
 
   return {
     ...workout,
     exercises: workout.exercises.map((ex) => {
       const base = LOADABLE_EX[ex.id]?.[levelKey];
       if (base === undefined) return ex;
-      const loadKg = Math.max(0, Math.round(base * sexAdj));
-      const professionalNote = loadKg > 0 ? `Mancuernas ${loadKg} kg total` : "Version tecnica profesional";
+      const loadKg = Math.max(0, Math.round(base * sexAdj * weekFactor));
+      const progressNote = weekInBlock > 1 ? ` (sem. ${weekInBlock})` : "";
+      const professionalNote = loadKg > 0 ? `Mancuernas ${loadKg} kg total${progressNote}` : "Version tecnica profesional";
       return { ...ex, loadKg, professionalNote };
     }),
   };

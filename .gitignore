@@ -7,3 +7,4 @@ dist/
 backup-*/
 *.zip
 node_modules
+.vercel

@@ -50,7 +50,7 @@ describe("weekStartIso", () => {
 
 // ─── scaleWorkout ─────────────────────────────────────────────────────────────
 const baseWorkout = {
-  day: "A",
+  day: "1",
   focus: "Test",
   exercises: [{ id: "pushup" as const, sets: 3, reps: 10, rest: 60 }],
 };
@@ -83,7 +83,7 @@ describe("scaleWorkout", () => {
 
   it("el descanso nunca baja de 15 segundos", () => {
     const shortRest = {
-      day: "A", focus: "Test",
+      day: "1", focus: "Test",
       exercises: [{ id: "pushup" as const, sets: 3, reps: 10, rest: 18 }],
     };
     const result = scaleWorkout(shortRest, "intenso");
@@ -126,7 +126,7 @@ describe("calcCalories", () => {
 
 // ─── applyProfessionalProgression ─────────────────────────────────────────────
 const workoutWithLoadable = {
-  day: "B",
+  day: "2",
   focus: "Piernas",
   exercises: [
     { id: "squat" as const, sets: 3, reps: 10, rest: 60 },
@@ -141,15 +141,15 @@ describe("applyProfessionalProgression", () => {
   });
 
   it("planLevel 1 asigna loadKg a squat (masculino)", () => {
-    // LOADABLE_EX.squat.intermedio=6, sexAdj=1 → loadKg=6
+    // LOADABLE_EX.squat.intermedio=8, sexAdj=1 → loadKg=8
     const result = applyProfessionalProgression(workoutWithLoadable, 1, profileM);
-    expect(result.exercises[0].loadKg).toBe(6);
+    expect(result.exercises[0].loadKg).toBe(8);
   });
 
   it("planLevel 2 con sexAdj femenino reduce la carga", () => {
-    // LOADABLE_EX.squat.avanzado=12, sexAdj=0.85 → Math.round(12*0.85)=10
+    // LOADABLE_EX.squat.avanzado=20, sexAdj=0.85 → Math.round(20*0.85)=17
     const result = applyProfessionalProgression(workoutWithLoadable, 2, profileF);
-    expect(result.exercises[0].loadKg).toBe(10);
+    expect(result.exercises[0].loadKg).toBe(17);
   });
 
   it("ejercicios sin carga (pushup) no se modifican", () => {

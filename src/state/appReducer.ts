@@ -6,6 +6,7 @@ import type {
   ExerciseId,
   ActiveWorkoutState,
   AppState,
+  WeightEntry,
 } from "../types";
 import { defaultWeeklyCalendar } from "../domain/data";
 
@@ -17,6 +18,7 @@ export interface AppReducerState {
   historyByProfile: Record<string, WorkoutResult[]>;
   weeklyCalendarByProfile: Record<string, WeeklyCalendar>;
   customExercisesByProfile: Record<string, ExerciseId[]>;
+  weightLogByProfile: Record<string, WeightEntry[]>;
   activeWorkout: ActiveWorkoutState | null;
   workoutResult: WorkoutResult | null;
   loaded: boolean;
@@ -30,6 +32,7 @@ export const initialState: AppReducerState = {
   historyByProfile: {},
   weeklyCalendarByProfile: {},
   customExercisesByProfile: {},
+  weightLogByProfile: {},
   activeWorkout: null,
   workoutResult: null,
   loaded: false,
@@ -55,6 +58,7 @@ export type AppAction =
   | { type: "SAVE_EXTRA_IDS"; payload: { userId: string; ids: ExerciseId[] } }
   | { type: "REMOVE_SAVED_EXTRA"; payload: { userId: string; id: ExerciseId } }
   | { type: "CLEAR_SAVED_EXTRAS"; payload: string }
+  | { type: "LOG_WEIGHT"; payload: { userId: string; entry: WeightEntry } }
   | { type: "TOGGLE_THEME" };
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
@@ -70,6 +74,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
         historyByProfile: action.payload.historyByProfile,
         weeklyCalendarByProfile: action.payload.weeklyCalendarByProfile,
         customExercisesByProfile: action.payload.customExercisesByProfile || {},
+        weightLogByProfile: action.payload.weightLogByProfile || {},
         themeMode: action.payload.themeMode,
         loaded: true,
       };
@@ -86,17 +91,20 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
         historyByProfile: { ...state.historyByProfile, [p.id]: [] },
         weeklyCalendarByProfile: { ...state.weeklyCalendarByProfile, [p.id]: defaultWeeklyCalendar() },
         customExercisesByProfile: { ...state.customExercisesByProfile, [p.id]: [] },
+        weightLogByProfile: { ...state.weightLogByProfile, [p.id]: [] },
       };
     }
 
-    case "UPDATE_PROFILE":
+    case "UPDATE_PROFILE": {
+      const { id, data } = action.payload;
       return {
         ...state,
         profiles: state.profiles.map((p) =>
-          p.id === action.payload.id ? { ...p, ...action.payload.data, id: p.id } : p,
+          p.id === id ? { ...p, ...data, id: p.id } : p,
         ),
         editingProfileId: null,
       };
+    }
 
     case "DELETE_PROFILE": {
       const id = action.payload;
@@ -104,6 +112,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
       const { [id]: _h, ...histRest } = state.historyByProfile;
       const { [id]: _w, ...calRest } = state.weeklyCalendarByProfile;
       const { [id]: _c, ...exRest } = state.customExercisesByProfile;
+      const { [id]: _wl, ...wlRest } = state.weightLogByProfile;
       return {
         ...state,
         profiles: remaining,
@@ -111,6 +120,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
         historyByProfile: histRest,
         weeklyCalendarByProfile: calRest,
         customExercisesByProfile: exRest,
+        weightLogByProfile: wlRest,
       };
     }
 
@@ -177,6 +187,19 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
         ...state,
         customExercisesByProfile: { ...state.customExercisesByProfile, [action.payload]: [] },
       };
+
+    case "LOG_WEIGHT": {
+      const { userId, entry } = action.payload;
+      const log = [...(state.weightLogByProfile[userId] || []), entry];
+      const updated = state.profiles.map(p =>
+        p.id === userId ? { ...p, weight: entry.weight } : p
+      );
+      return {
+        ...state,
+        profiles: updated,
+        weightLogByProfile: { ...state.weightLogByProfile, [userId]: log },
+      };
+    }
 
     case "TOGGLE_THEME":
       return { ...state, themeMode: state.themeMode === "dark" ? "light" : "dark" };

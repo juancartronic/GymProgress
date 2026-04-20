@@ -8,6 +8,7 @@ describe("Onboarding", () => {
     render(<Onboarding onSave={vi.fn()} />);
     expect(screen.getByText("Cuentanos sobre ti")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Como te llamas?")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("88")).toBeInTheDocument();
   });
 
   it("no permite enviar si faltan datos", async () => {

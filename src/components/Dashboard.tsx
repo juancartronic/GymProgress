@@ -4,11 +4,11 @@ import { S } from "../theme/styles";
 import { EXDB, WEEK_DAYS, DAY_STATE_ORDER, DAY_STATE_META, DAY_STATE_META_LIGHT, getPlanForGoalAndLevel } from "../domain/data";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { buildObjective, buildNutritionPlan } from "../domain/planning";
-import { getWeeklyMealExamples, adaptMealWeekByCalories } from "../domain/mealData";
+import { getWeeklyMealExamples, adaptMealWeekByNutrition, getDaySnackRecommendation, buildWeeklyShoppingList } from "../domain/mealData";
 import { ProgressBar } from "./ProgressBar";
 import { exportAppData, importAppData } from "../storage/appStorage";
 import { requestNotificationPermission, scheduleWorkoutReminder } from "../storage/notifications";
-import type { UserProfile, WorkoutResult, Workout, WeeklyCalendar, DayKey, ThemeMode, ExerciseId, AppState } from "../types";
+import type { UserProfile, WorkoutResult, Workout, WeeklyCalendar, DayKey, ThemeMode, ExerciseId, AppState, WeightEntry } from "../types";
 
 interface DashboardProps {
   user: UserProfile;
@@ -27,6 +27,8 @@ interface DashboardProps {
   onRemoveSavedExtra: (id: ExerciseId) => void;
   onClearSavedExtras: () => void;
   onImportData?: (state: AppState) => void;
+  weightLog: WeightEntry[];
+  onLogWeight: (weight: number) => void;
 }
 
 export function Dashboard({
@@ -34,10 +36,19 @@ export function Dashboard({
   onSwitchProfile, onAddProfile, onEditProfile, onDeleteProfile,
   onStartWorkout, weeklyCalendar, onCycleDayState, themeMode,
   savedExtraIds = [], onRemoveSavedExtra, onClearSavedExtras, onImportData,
+  weightLog, onLogWeight,
 }: DashboardProps) {
   const isMobile = useIsMobile();
   const [mealWeekIdx, setMealWeekIdx] = useState(0);
   const [veganOnly, setVeganOnly] = useState(user?.dietPreference === "vegana");
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [showWeightPrompt, setShowWeightPrompt] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderHour, setReminderHour] = useState("18");
+  const [reminderMin, setReminderMin] = useState("00");
+  const [showTodaySnack, setShowTodaySnack] = useState(false);
+  const [showShoppingList, setShowShoppingList] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dashboardAccent = themeMode === "light" ? "#2b6500" : S.accent;
   const totalWorkouts = history.length;
@@ -53,18 +64,49 @@ export function Dashboard({
   })();
   const currentLevel = Math.min(2, Math.floor(totalWorkouts / 12));
   const plan = getPlanForGoalAndLevel(user.goal, currentLevel) ?? getPlanForGoalAndLevel("fuerza", 0)!;
+  const weeklyTrainingDays = Object.values(weeklyCalendar || {}).filter((state) => state === "entreno").length || plan.workouts.length;
   const objective = buildObjective(user, currentLevel);
-  const nutrition = buildNutritionPlan(user, currentLevel, totalWorkouts);
-  const allMealWeeks = getWeeklyMealExamples(user?.goal);
+  const nutrition = buildNutritionPlan(user, currentLevel, weeklyTrainingDays, plan);
+  const allMealWeeks = getWeeklyMealExamples(user?.goal, user?.gender);
   const filteredMealWeeks = veganOnly ? allMealWeeks.filter(w => w.type === "vegana") : allMealWeeks;
   const availableMealWeeks = filteredMealWeeks.length ? filteredMealWeeks : allMealWeeks;
-  const selectedMealWeek = adaptMealWeekByCalories(availableMealWeeks[mealWeekIdx % availableMealWeeks.length], nutrition.calories);
+  const selectedMealWeek = adaptMealWeekByNutrition(availableMealWeeks[mealWeekIdx % availableMealWeeks.length], nutrition, weeklyCalendar);
+  const weeklyShoppingList = buildWeeklyShoppingList(selectedMealWeek);
+  const totalShoppingGrams = weeklyShoppingList.reduce((sum, item) => sum + item.totalGrams, 0);
   const progressToNext = Math.min(12, totalWorkouts - currentLevel * 12);
 
   useEffect(() => {
     setMealWeekIdx(0);
     setVeganOnly(user?.dietPreference === "vegana");
   }, [user?.goal, activeProfileId, user?.dietPreference]);
+
+  // Weekly weight check-in: show prompt if 7+ days since last log
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastEntry = weightLog.length > 0 ? weightLog[weightLog.length - 1] : null;
+    if (!lastEntry) {
+      setShowWeightPrompt(true);
+      return;
+    }
+    const daysSince = Math.floor((Date.now() - new Date(lastEntry.date).getTime()) / 864e5);
+    if (daysSince >= 7) setShowWeightPrompt(true);
+  }, [weightLog, activeProfileId]);
+
+  const handleWeightSubmit = () => {
+    const w = parseFloat(weightInput.replace(",", "."));
+    if (!w || w < 30 || w > 300) return;
+    onLogWeight(w);
+    setShowWeightPrompt(false);
+    setWeightInput("");
+  };
+
+  // Today's snack recommendation
+  const todayJsDay = new Date().getDay(); // 0=dom,1=lun,...,6=sab
+  const weekDayIndex = todayJsDay === 0 ? 6 : todayJsDay - 1; // convert to mon=0..sun=6
+  const todayDayKey = WEEK_DAYS[weekDayIndex]?.key as import("../types").DayKey;
+  const todayState = weeklyCalendar?.[todayDayKey] || "descanso";
+  const todaySnack = getDaySnackRecommendation(todayState, nutrition.dominantStimulus, user.goal);
+  const formatShoppingWeight = (grams: number) => (grams >= 1000 ? `${(grams / 1000).toFixed(2)} kg` : `${grams} g`);
 
   return (
     <div style={{ ...S.container, paddingTop:32 }}>
@@ -88,11 +130,7 @@ export function Dashboard({
             a.click();URL.revokeObjectURL(url);
           }} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Exportar</button>
           <button onClick={()=>fileInputRef.current?.click()} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>Importar</button>
-          <button onClick={async()=>{
-            const ok=await requestNotificationPermission();
-            if(ok){ scheduleWorkoutReminder(18,0); toast.success("Recordatorio de entrenamiento activado (18:00)"); }
-            else toast.error("Permisos de notificación denegados");
-          }} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>🔔 Recordatorio</button>
+          <button onClick={()=>setShowReminderModal(true)} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:13, border:"1px solid var(--border-main)" }}>🔔 Recordatorio</button>
           <input ref={fileInputRef} type="file" accept=".json" style={{display:"none"}} onChange={e=>{
             const file=e.target.files?.[0];
             if(!file)return;
@@ -119,6 +157,82 @@ export function Dashboard({
           </div>
         ))}
       </div>
+
+      {/* Reminder time picker modal */}
+      {showReminderModal && (
+        <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(0,0,0,0.6)", display:"flex", alignItems:"center", justifyContent:"center" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowReminderModal(false); }}>
+          <div style={{ ...S.card, maxWidth:340, width:"90%", padding:28, textAlign:"center", borderRadius:18 }}>
+            <div style={{ fontSize:18, fontWeight:700, color:"var(--text-main)", marginBottom:8 }}>🔔 Recordatorio diario</div>
+            <p style={{ fontSize:13, color:S.muted, margin:"0 0 20px" }}>Elige la hora a la que quieres recibir el recordatorio de entrenamiento.</p>
+            <div style={{ display:"flex", gap:8, justifyContent:"center", alignItems:"center", marginBottom:20 }}>
+              <input type="number" min="0" max="23" value={reminderHour} onChange={e => setReminderHour(e.target.value.padStart(2,"0"))}
+                style={{ background:"var(--input-bg)", border:"1px solid var(--input-border)", color:"var(--text-main)", borderRadius:10, padding:"10px", fontFamily:"'DM Mono',monospace", fontSize:20, width:64, textAlign:"center" }} />
+              <span style={{ fontSize:20, color:S.muted, fontWeight:700 }}>:</span>
+              <input type="number" min="0" max="59" value={reminderMin} onChange={e => setReminderMin(e.target.value.padStart(2,"0"))}
+                style={{ background:"var(--input-bg)", border:"1px solid var(--input-border)", color:"var(--text-main)", borderRadius:10, padding:"10px", fontFamily:"'DM Mono',monospace", fontSize:20, width:64, textAlign:"center" }} />
+            </div>
+            <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+              <button onClick={async () => {
+                const h = Math.min(23, Math.max(0, parseInt(reminderHour) || 0));
+                const m = Math.min(59, Math.max(0, parseInt(reminderMin) || 0));
+                const ok = await requestNotificationPermission();
+                if (ok) {
+                  scheduleWorkoutReminder(h, m);
+                  toast.success(`Recordatorio activado a las ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`);
+                  setShowReminderModal(false);
+                } else {
+                  toast.error("Permisos de notificación denegados. Actívalos desde la configuración del navegador.");
+                }
+              }} style={{ ...S.btn(S.accent,"#000"), padding:"10px 20px", fontWeight:700, fontSize:13, borderRadius:10 }}>Activar</button>
+              <button onClick={() => setShowReminderModal(false)} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 14px", fontSize:13, border:"1px solid var(--border-main)", borderRadius:10 }}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weight check-in prompt */}
+      {showWeightPrompt && (
+        <div style={{ ...S.card, marginBottom:20, border:"1px solid var(--accent)", background:"var(--surface-soft)", textAlign:"center", padding: isMobile ? 16 : 20 }}>
+          <div style={{ fontSize:15, fontWeight:600, color:"var(--text-main)", marginBottom:8 }}>⚖️ Control semanal de peso</div>
+          <p style={{ fontSize:12, color:S.muted, margin:"0 0 12px" }}>Registra tu peso actual para hacer seguimiento</p>
+          <div style={{ display:"flex", justifyContent:"center", gap:8, alignItems:"center" }}>
+            <input
+              type="number" step="0.1" min="30" max="300"
+              placeholder={`${user.weight} kg`}
+              value={weightInput}
+              onChange={e => setWeightInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleWeightSubmit()}
+              style={{ background:"var(--input-bg)", border:"1px solid var(--input-border)", color:"var(--text-main)", borderRadius:10, padding:"10px 14px", fontFamily:"'DM Sans',sans-serif", fontSize:14, width:100, textAlign:"center" }}
+            />
+            <button onClick={handleWeightSubmit} style={{ ...S.btn(S.accent,"#000"), padding:"10px 18px", fontWeight:700, fontSize:13, borderRadius:10 }}>Guardar</button>
+            <button onClick={() => setShowWeightPrompt(false)} style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"10px 12px", fontSize:12, border:"1px solid var(--border-main)", borderRadius:10 }}>Omitir</button>
+          </div>
+        </div>
+      )}
+
+      {/* Weight history mini-chart */}
+      {weightLog.length > 1 && (
+        <div style={{ ...S.card, marginBottom:20, padding: isMobile ? 14 : 18 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:"var(--text-main)", marginBottom:10 }}>📈 Historial de peso</div>
+          <div style={{ display:"flex", alignItems:"flex-end", gap:2, height:60 }}>
+            {(()=>{
+              const entries = weightLog.slice(-12);
+              const min = Math.min(...entries.map(e=>e.weight));
+              const max = Math.max(...entries.map(e=>e.weight));
+              const range = max - min || 1;
+              return entries.map((e,i) => (
+                <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+                  <div style={{ fontSize:8, color:S.muted }}>{e.weight}</div>
+                  <div style={{ width:"100%", maxWidth:28, borderRadius:4, background: i === entries.length-1 ? S.accent : "var(--surface-soft)", height: Math.max(6, ((e.weight-min)/range)*48) }} />
+                  <div style={{ fontSize:7, color:S.muted }}>{e.date.slice(5)}</div>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      )}
+
       <div style={{ ...S.card, marginBottom:20, background:"var(--card-plan-bg)", border:"1px solid #c8ff0030" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
@@ -142,9 +256,27 @@ export function Dashboard({
           <span style={{ fontSize:12, color:"var(--text-muted)" }}>{objective.horizonWeeks} semanas</span>
         </div>
         <h3 style={{ ...S.heading, fontSize:24, margin:"4px 0 8px" }}>{objective.phase.toUpperCase()}</h3>
-        <p style={{ fontSize:13, color:S.muted, margin:"0 0 8px" }}>
-          Peso objetivo: <strong style={{ color:"var(--text-main)" }}>{objective.targetWeight} kg</strong>
-          {objective.targetFat !== null ? <> - Grasa objetivo: <strong style={{ color:"var(--text-main)" }}>{objective.targetFat}%</strong></> : null}
+
+        {/* Body composition summary */}
+        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: isMobile ? 4 : 8, marginBottom:12 }}>
+          {[
+            { label:"IMC", value: objective.bmi, unit:"", sub: objective.bmiCategory },
+            { label:"Cintura/altura", value: objective.waistToHeightRatio ?? "--", unit:"", sub: objective.metabolicRisk },
+            { label:"Grasa est.", value: objective.estimatedBF, unit:"%", sub: `${objective.leanMass} kg magro` },
+            { label:"Peso obj.", value: objective.targetWeight, unit:"kg", sub: `${objective.targetFat}% grasa` },
+          ].map(m => (
+            <div key={m.label} style={{ background:"var(--surface-soft)", borderRadius:10, padding: isMobile ? "8px 4px" : "10px 8px", textAlign:"center" }}>
+              <div style={{ fontSize: isMobile ? 16 : 20, fontWeight:700, color:"#62adff" }}>{m.value}{m.unit}</div>
+              <div style={{ fontSize:10, color:S.muted }}>{m.label}</div>
+              <div style={{ fontSize:9, color:S.muted, marginTop:2 }}>{m.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ fontSize:11, color:S.muted, margin:"0 0 8px" }}>{objective.compositionMethod}</p>
+
+        <p style={{ fontSize:12, color:"var(--text-main)", margin:"0 0 8px", lineHeight:1.5 }}>
+          {objective.recommendation}
         </p>
         <p style={{ fontSize:12, color:S.muted, margin:0 }}>
           {objective.professional
@@ -158,6 +290,7 @@ export function Dashboard({
           <span style={{ fontSize:12, color:"var(--text-muted)" }}>{nutrition.calories} kcal/dia</span>
         </div>
         <p style={{ fontSize:12, color:"var(--text-muted)", margin:"0 0 8px" }}>{nutrition.focus}</p>
+        <p style={{ fontSize:11, color:S.muted, margin:"0 0 10px" }}>{nutrition.trainingSummary}</p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: isMobile ? 4 : 8, marginBottom:8 }}>
           <div style={{ background:"var(--surface-inner)", border:"1px solid #3a3022", borderRadius:10, padding: isMobile ? "8px 4px" : "8px 6px", textAlign:"center" }}>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize: isMobile ? 12 : 14, color:"var(--data-val)" }}>{nutrition.protein}g</div>
@@ -173,19 +306,51 @@ export function Dashboard({
           </div>
         </div>
         <p style={{ fontSize:11, color:S.muted, margin:0 }}>Hidratacion objetivo: {nutrition.hydration} ml/dia (aprox.).</p>
+        <p style={{ fontSize:11, color:S.muted, margin:"6px 0 0" }}>{nutrition.mealStrategy}</p>
+        <p style={{ fontSize:11, color:S.muted, margin:"6px 0 0" }}>{nutrition.preWorkout}</p>
+        <p style={{ fontSize:11, color:S.muted, margin:"6px 0 0" }}>{nutrition.postWorkout}</p>
+        <button
+          onClick={() => setShowTodaySnack(v => !v)}
+          style={{ ...S.btn("var(--surface-inner)","var(--text-main)"), marginTop:12, width:"100%", padding:"9px 12px", fontSize:12, fontWeight:600, border:"1px solid #ffb35a50", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <span>🍽️ Nutrición de hoy</span>
+          <span style={{ fontSize:10, color:S.muted }}>{showTodaySnack ? "▲" : "▼"}</span>
+        </button>
+        {showTodaySnack && (
+          <div style={{ marginTop:10, borderTop:"1px solid #ffb35a30", paddingTop:10 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:"var(--text-main)", marginBottom:4 }}>
+              <span style={{ color:S.accent }}>{todaySnack.dayLabel}</span>
+            </div>
+            <p style={{ fontSize:12, color:S.muted, margin:"0 0 10px" }}>{todaySnack.tipText}</p>
+            {todaySnack.preWorkout && (
+              <div style={{ marginBottom:8, padding:"8px 12px", background:"var(--surface-inner)", borderRadius:10 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:S.accent, marginBottom:2 }}>PRE-ENTRENO · {todaySnack.preWorkout.timing}</div>
+                <div style={{ fontSize:13, color:"var(--text-main)", fontWeight:600 }}>{todaySnack.preWorkout.name}</div>
+                <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{todaySnack.preWorkout.macroHint}</div>
+              </div>
+            )}
+            {todaySnack.postWorkout && (
+              <div style={{ padding:"8px 12px", background:"var(--surface-inner)", borderRadius:10 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#7ab8ff", marginBottom:2 }}>POST-ENTRENO · {todaySnack.postWorkout.timing}</div>
+                <div style={{ fontSize:13, color:"var(--text-main)", fontWeight:600 }}>{todaySnack.postWorkout.name}</div>
+                <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>{todaySnack.postWorkout.macroHint}</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div style={{ ...S.card, marginBottom:20, padding: isMobile ? "14px 10px" : "20px", background:"var(--card-cal-bg)", border:"1px solid #50d0b030" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
           <span style={S.pill("#50d0b0")}>CALENDARIO SEMANAL</span>
           <span style={{ fontSize:11, color:S.muted }}>Click para cambiar estado</span>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap: isMobile ? 3 : 6 }}>
-          {WEEK_DAYS.map(d => {
+        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "repeat(4,1fr)" : "repeat(7,1fr)", gap: isMobile ? 3 : 6 }}>
+          {WEEK_DAYS.map((d, i) => {
             const state = weeklyCalendar?.[d.key] || "descanso";
             const meta = (themeMode === "light" ? DAY_STATE_META_LIGHT : DAY_STATE_META)[state];
             return (
               <button key={d.key} onClick={() => onCycleDayState(d.key)}
-                style={{ border:`1px solid ${meta.border}`, background:meta.bg, color:meta.fg, borderRadius: isMobile ? 8 : 10, padding: isMobile ? "6px 2px" : "8px 4px", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", minWidth:0, overflow:"hidden" }}>
+                style={{ border:`1px solid ${meta.border}`, background:meta.bg, color:meta.fg, borderRadius: isMobile ? 8 : 10, padding: isMobile ? "6px 2px" : "8px 4px", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", minWidth:0, overflow:"hidden",
+                  ...(isMobile && i === 4 ? { gridColumn: "1 / 2" } : {}) }}>
                 <div style={{ fontSize: isMobile ? 10 : 11, fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{d.label}</div>
                 <div style={{ fontSize: isMobile ? 7 : 9, marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{meta.label}</div>
               </button>
@@ -241,14 +406,100 @@ export function Dashboard({
         <p style={{ fontSize:11, color:"var(--text-muted)", margin:"0 0 10px" }}>
           {selectedMealWeek.type === "vegana" ? "Version vegana disponible en rotacion." : "Version omnivora de referencia."}
         </p>
+        <p style={{ fontSize:11, color:S.muted, margin:"0 0 10px" }}>{selectedMealWeek.strategyLabel}</p>
         <p style={{ fontSize:11, color:S.muted, margin:"0 0 10px" }}>{selectedMealWeek.calorieLabel}</p>
-        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-          {selectedMealWeek.days.map(it => (
-            <div key={it.day} style={{ background:"var(--surface-inner)", border:"1px solid #342422", borderRadius:10, padding:"9px 10px" }}>
-              <div style={{ fontSize:12, fontWeight:700, color:"var(--text-main)", marginBottom:3 }}>{it.day}</div>
-              <div style={{ fontSize:11, color:S.muted, lineHeight:1.4 }}>{it.meals}</div>
+        <button
+          onClick={() => setShowShoppingList(v => !v)}
+          style={{ ...S.btn("var(--surface-inner)","var(--text-main)"), width:"100%", marginBottom:10, padding:"9px 12px", fontSize:12, fontWeight:600, border:"1px solid #ff857450", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <span>🛒 Lista de compra semanal</span>
+          <span style={{ fontSize:10, color:S.muted }}>{showShoppingList ? "▲" : "▼"}</span>
+        </button>
+        {showShoppingList && (
+          <div style={{ background:"var(--surface-inner)", border:"1px solid #342422", borderRadius:10, padding:"10px 12px", marginBottom:10 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"var(--text-main)" }}>
+                {weeklyShoppingList.length} productos · {formatShoppingWeight(totalShoppingGrams)}
+              </div>
+              <button
+                onClick={() => {
+                  const catMap = new Map<string, typeof weeklyShoppingList>();
+                  weeklyShoppingList.forEach(item => {
+                    const arr = catMap.get(item.category) || [];
+                    arr.push(item);
+                    catMap.set(item.category, arr);
+                  });
+                  const lines: string[] = [`LISTA DE LA COMPRA – ${selectedMealWeek.title}`, ""];
+                  catMap.forEach((items, cat) => {
+                    lines.push(`▸ ${cat}`);
+                    items.forEach(i => lines.push(`  • ${i.name}: ${formatShoppingWeight(i.totalGrams)}`));
+                    lines.push("");
+                  });
+                  navigator.clipboard.writeText(lines.join("\n")).then(() => toast.success("Lista copiada al portapapeles"));
+                }}
+                style={{ ...S.btn("var(--surface-soft)","var(--text-main)"), padding:"6px 10px", fontSize:11, border:"1px solid var(--border-main)", borderRadius:8 }}>
+                📋 Copiar lista
+              </button>
             </div>
-          ))}
+            {(() => {
+              const catMap = new Map<string, typeof weeklyShoppingList>();
+              weeklyShoppingList.forEach(item => {
+                const arr = catMap.get(item.category) || [];
+                arr.push(item);
+                catMap.set(item.category, arr);
+              });
+              return Array.from(catMap.entries()).map(([cat, items]) => (
+                <div key={cat} style={{ marginBottom:10 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#ffb35a", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:4 }}>{cat}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                    {items.map(item => (
+                      <div key={item.name} style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:8, alignItems:"center", paddingBottom:4, borderBottom:"1px solid #342422" }}>
+                        <div>
+                          <div style={{ fontSize:12, color:"var(--text-main)", fontWeight:600 }}>{item.name}</div>
+                          <div style={{ fontSize:10, color:S.muted }}>{item.appearances} vez{item.appearances !== 1 ? "es" : ""} · ~{item.totalKcal} kcal</div>
+                        </div>
+                        <div style={{ fontSize:11, color:"#ffb98c", fontFamily:"'DM Mono', monospace" }}>{formatShoppingWeight(item.totalGrams)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )}
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {selectedMealWeek.days.map(it => {
+            const isOpen = expandedDay === it.day;
+            const dayKcal = it.slots?.reduce((s, sl) => s + sl.items.reduce((a, b) => a + b.kcal, 0), 0) ?? 0;
+            return (
+              <div key={it.day} style={{ background:"var(--surface-inner)", border:"1px solid #342422", borderRadius:10, padding:"9px 10px", cursor:"pointer" }}
+                onClick={() => setExpandedDay(isOpen ? null : it.day)}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:"var(--text-main)" }}>{it.day}</div>
+                  <div style={{ fontSize:10, color:S.muted }}>{dayKcal ? `${dayKcal} kcal` : ""} {isOpen ? "▲" : "▼"}</div>
+                </div>
+                {isOpen && it.slots && (
+                  <div style={{ marginTop:8, display:"flex", flexDirection:"column", gap:8 }}>
+                    {it.strategyLabel ? <div style={{ fontSize:10, color:S.muted, marginBottom:2 }}>{it.strategyLabel}</div> : null}
+                    {it.slots.map(s => {
+                      const slotKcal = s.items.reduce((a, b) => a + b.kcal, 0);
+                      return (
+                        <div key={s.label}>
+                          <div style={{ fontSize:11, fontWeight:600, color:"#ff8574", marginBottom:3 }}>
+                            {s.label} <span style={{ fontWeight:400, color:S.muted }}>({slotKcal} kcal)</span>
+                          </div>
+                          {s.items.map(item => (
+                            <div key={item.name} style={{ fontSize:10, color:S.muted, paddingLeft:10, lineHeight:1.6 }}>
+                              {item.name} ({item.grams}g) · {item.kcal} kcal · {item.protein}p / {item.carbs}c / {item.fat}g
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
       <h3 style={{ ...S.heading, fontSize:18, margin:"0 0 14px", color:S.muted }}>ENTRENAMIENTOS DE HOY</h3>

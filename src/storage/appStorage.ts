@@ -14,13 +14,14 @@ const readJson = <T>(record: { value: string } | null, fallback: T): T => {
 /** Loads persisted app state from browser storage. Handles migration from legacy single-profile format. */
 export const loadAppState = async (): Promise<AppState | null> => {
   try {
-    const [profilesRec, activeRec, historyRec, calendarRec, themeRec, customExercisesRec] = await Promise.all([
+    const [profilesRec, activeRec, historyRec, calendarRec, themeRec, customExercisesRec, weightLogRec] = await Promise.all([
       window.storage.get("irontrack-profiles"),
       window.storage.get("irontrack-active-profile"),
       window.storage.get("irontrack-history-by-profile"),
       window.storage.get("irontrack-weekly-calendar-by-profile"),
       window.storage.get("irontrack-theme-mode"),
       window.storage.get("irontrack-custom-exercises-by-profile"),
+      window.storage.get("irontrack-weight-log-by-profile"),
     ]);
 
     if (profilesRec && activeRec) {
@@ -30,6 +31,7 @@ export const loadAppState = async (): Promise<AppState | null> => {
         historyByProfile: readJson(historyRec, {}),
         weeklyCalendarByProfile: readJson(calendarRec, {}),
         customExercisesByProfile: readJson(customExercisesRec, {}),
+        weightLogByProfile: readJson(weightLogRec, {}),
         themeMode: (themeRec?.value || "dark") as ThemeMode,
       };
     }
@@ -48,11 +50,12 @@ export const loadAppState = async (): Promise<AppState | null> => {
 
     const migratedId = `p-${Date.now()}`;
     return {
-      profiles: [{ ...parsedUser, id: migratedId, height: parsedUser.height || 170 } as UserProfile],
+      profiles: [{ ...parsedUser, id: migratedId, height: parsedUser.height || 170, waistCm: parsedUser.waistCm || "" } as UserProfile],
       activeProfileId: migratedId,
       historyByProfile: { [migratedId]: readJson(legacyHistory, []) },
       weeklyCalendarByProfile: { [migratedId]: defaultWeeklyCalendar() },
       customExercisesByProfile: { [migratedId]: [] },
+      weightLogByProfile: { [migratedId]: [] },
       themeMode: (themeRec?.value || "dark") as ThemeMode,
     };
   } catch {
@@ -61,13 +64,14 @@ export const loadAppState = async (): Promise<AppState | null> => {
 };
 
 /** Persists app state to browser storage. Returns `{ ok, error }` — handles QuotaExceeded gracefully. */
-export const saveAppState = ({ profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, themeMode }: AppState): { ok: boolean; error?: string } => {
+export const saveAppState = ({ profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, weightLogByProfile, themeMode }: AppState): { ok: boolean; error?: string } => {
   try {
     window.storage.set("irontrack-profiles", JSON.stringify(profiles));
     if (activeProfileId) window.storage.set("irontrack-active-profile", activeProfileId);
     window.storage.set("irontrack-history-by-profile", JSON.stringify(historyByProfile));
     window.storage.set("irontrack-weekly-calendar-by-profile", JSON.stringify(weeklyCalendarByProfile));
     window.storage.set("irontrack-custom-exercises-by-profile", JSON.stringify(customExercisesByProfile || {}));
+    window.storage.set("irontrack-weight-log-by-profile", JSON.stringify(weightLogByProfile || {}));
     window.storage.set("irontrack-theme-mode", themeMode);
     return { ok: true };
   } catch (e) {
@@ -113,6 +117,7 @@ export const importAppData = async (input: string, passphrase?: string): Promise
     historyByProfile: (d.historyByProfile || {}) as AppState["historyByProfile"],
     weeklyCalendarByProfile: (d.weeklyCalendarByProfile || {}) as AppState["weeklyCalendarByProfile"],
     customExercisesByProfile: (d.customExercisesByProfile || {}) as AppState["customExercisesByProfile"],
+    weightLogByProfile: (d.weightLogByProfile || {}) as AppState["weightLogByProfile"],
     themeMode: (d.themeMode as ThemeMode) || "dark",
   };
   const result = saveAppState(state);

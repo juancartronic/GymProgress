@@ -16,6 +16,7 @@ const onboardingSchema = z.object({
   name: z.string().min(2, "Escribe al menos 2 caracteres."),
   weight: z.coerce.number().min(30, "Introduce un peso entre 30 y 300 kg.").max(300, "Introduce un peso entre 30 y 300 kg."),
   height: z.coerce.number().min(120, "Introduce una altura entre 120 y 230 cm.").max(230, "Introduce una altura entre 120 y 230 cm."),
+  waistCm: z.union([z.literal(""), z.coerce.number().min(50, "Si lo indicas, usa un rango entre 50 y 200 cm.").max(200, "Si lo indicas, usa un rango entre 50 y 200 cm.")]).optional().default(""),
   bodyFat: z.union([z.literal(""), z.coerce.number().min(3, "Si lo indicas, usa un rango entre 3% y 65%.").max(65, "Si lo indicas, usa un rango entre 3% y 65%.")]).optional().default(""),
   age: z.coerce.number().min(12, "Introduce una edad entre 12 y 100 anos.").max(100, "Introduce una edad entre 12 y 100 anos."),
   gender: z.enum(["masculino", "femenino"]),
@@ -30,8 +31,8 @@ export function Onboarding({ onSave, onCancel, initialData, modeLabel }: Onboard
     resolver: zodResolver(onboardingSchema) as Resolver<OnboardingFormData>,
     mode: "onChange",
     defaultValues: initialData
-      ? { name: initialData.name, weight: initialData.weight as number, height: initialData.height as number, bodyFat: initialData.bodyFat as number | "", age: initialData.age as number, gender: initialData.gender as "masculino" | "femenino", goal: initialData.goal as "fuerza" | "cardio" | "perdida" | "tono", dietPreference: initialData.dietPreference as "general" | "vegana" }
-      : { name: "", weight: "" as unknown as number, height: "" as unknown as number, bodyFat: "", age: "" as unknown as number, gender: "masculino", goal: "fuerza", dietPreference: "general" },
+      ? { name: initialData.name, weight: initialData.weight as number, height: initialData.height as number, waistCm: initialData.waistCm as number | "" | undefined, bodyFat: initialData.bodyFat as number | "", age: initialData.age as number, gender: initialData.gender as "masculino" | "femenino", goal: initialData.goal as "fuerza" | "cardio" | "perdida" | "tono", dietPreference: initialData.dietPreference as "general" | "vegana" }
+      : { name: "", weight: "" as unknown as number, height: "" as unknown as number, waistCm: "", bodyFat: "", age: "" as unknown as number, gender: "masculino", goal: "fuerza", dietPreference: "general" },
   });
 
   const form = watch();
@@ -39,6 +40,7 @@ export function Onboarding({ onSave, onCancel, initialData, modeLabel }: Onboard
   const onSubmit = (data: OnboardingFormData) => {
     onSave({
       ...data,
+      waistCm: data.waistCm === "" ? "" : Number(data.waistCm),
       bodyFat: data.bodyFat === "" ? "" : Number(data.bodyFat),
     } as Omit<UserProfile, "id">);
   };
@@ -61,6 +63,7 @@ export function Onboarding({ onSave, onCancel, initialData, modeLabel }: Onboard
         {([{ label:"Nombre", name:"name" as const, type:"text", placeholder:"Como te llamas?" },
           { label:"Peso (kg)", name:"weight" as const, type:"number", placeholder:"70" },
           { label:"Altura (cm)", name:"height" as const, type:"number", placeholder:"175" },
+          { label:"Cintura (cm, opcional)", name:"waistCm" as const, type:"number", placeholder:"88" },
           { label:"Grasa corporal (%)", name:"bodyFat" as const, type:"number", placeholder:"22" },
           { label:"Edad", name:"age" as const, type:"number", placeholder:"25" }] as const).map(({ label, name, type, placeholder }) => (
           <label key={name} style={{ display:"flex", flexDirection:"column", gap:6 }}>

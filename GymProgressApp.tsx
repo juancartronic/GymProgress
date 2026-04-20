@@ -28,7 +28,7 @@ export default function App(){
   const location = useLocation();
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const { profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, activeWorkout, workoutResult, loaded, editingProfileId, themeMode } = state;
+  const { profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, weightLogByProfile, activeWorkout, workoutResult, loaded, editingProfileId, themeMode } = state;
 
   const theme=THEMES[themeMode] || THEMES.dark;
 
@@ -55,10 +55,10 @@ export default function App(){
 
   useEffect(()=>{
     if(!loaded)return;
-    const result = saveAppState({ profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, themeMode });
+    const result = saveAppState({ profiles, activeProfileId, historyByProfile, weeklyCalendarByProfile, customExercisesByProfile, weightLogByProfile, themeMode });
     if(!result.ok && result.error) toast.error(result.error);
     if(user&&location.pathname==="/onboarding") navigate("/dashboard",{replace:true});
-  },[profiles,activeProfileId,historyByProfile,weeklyCalendarByProfile,customExercisesByProfile,themeMode,loaded,user,location.pathname,navigate]);
+  },[profiles,activeProfileId,historyByProfile,weeklyCalendarByProfile,customExercisesByProfile,weightLogByProfile,themeMode,loaded,user,location.pathname,navigate]);
 
   if(!loaded)return(
     <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start"} as React.CSSProperties}>
@@ -228,6 +228,12 @@ export default function App(){
               }}
               themeMode={themeMode}
               onImportData={(s)=>dispatch({type:"IMPORT_STATE",payload:s})}
+              weightLog={user ? (weightLogByProfile[user.id] || []) : []}
+              onLogWeight={(w)=>{
+                if(!user)return;
+                dispatch({type:"LOG_WEIGHT",payload:{userId:user.id,entry:{date:new Date().toISOString().slice(0,10),weight:w}}});
+                toast.success(`Peso actualizado: ${w} kg`);
+              }}
             />
             </PageTransition>
           ) : <Navigate to="/onboarding" replace />

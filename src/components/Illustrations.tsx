@@ -306,6 +306,138 @@ const P: Record<string, Pose> = {
     head:{x:90,y:20}, neck:{x:90,y:28}, shoulderL:{x:82,y:32}, shoulderR:{x:98,y:32}, elbowL:{x:72,y:22}, elbowR:{x:108,y:22}, handL:{x:66,y:14}, handR:{x:114,y:14},
     hipL:{x:84,y:52}, hipR:{x:96,y:52}, kneeL:{x:82,y:68}, kneeR:{x:98,y:68}, footL:{x:80,y:82}, footR:{x:100,y:82}
   },
+  // ── DB Chest Press (lying, press up) ─────────────────────────────────────
+  dbChestPressDown: {
+    head:{x:130,y:74}, neck:{x:122,y:78}, shoulderL:{x:114,y:80}, shoulderR:{x:120,y:82},
+    elbowL:{x:108,y:72}, elbowR:{x:126,y:74}, handL:{x:102,y:68}, handR:{x:132,y:70},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:72,y:72}, kneeR:{x:78,y:74}, footL:{x:62,y:88}, footR:{x:68,y:90}
+  },
+  dbChestPressUp: {
+    head:{x:130,y:74}, neck:{x:122,y:78}, shoulderL:{x:114,y:80}, shoulderR:{x:120,y:82},
+    elbowL:{x:112,y:64}, elbowR:{x:122,y:66}, handL:{x:110,y:52}, handR:{x:124,y:54},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:72,y:72}, kneeR:{x:78,y:74}, footL:{x:62,y:88}, footR:{x:68,y:90}
+  },
+  // ── DB Fly (lying, open/close arms) ──────────────────────────────────────
+  dbFlyOpen: {
+    head:{x:130,y:74}, neck:{x:122,y:78}, shoulderL:{x:114,y:80}, shoulderR:{x:120,y:82},
+    elbowL:{x:102,y:70}, elbowR:{x:134,y:72}, handL:{x:94,y:66}, handR:{x:142,y:68},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:72,y:72}, kneeR:{x:78,y:74}, footL:{x:62,y:88}, footR:{x:68,y:90}
+  },
+  dbFlyClosed: {
+    head:{x:130,y:74}, neck:{x:122,y:78}, shoulderL:{x:114,y:80}, shoulderR:{x:120,y:82},
+    elbowL:{x:112,y:66}, elbowR:{x:124,y:68}, handL:{x:114,y:56}, handR:{x:122,y:58},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:72,y:72}, kneeR:{x:78,y:74}, footL:{x:62,y:88}, footR:{x:68,y:90}
+  },
+  // ── Romanian Deadlift (hip hinge with dumbbells) ─────────────────────────
+  rdlUp: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:80,y:56}, elbowR:{x:100,y:56}, handL:{x:80,y:68}, handR:{x:100,y:68},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  rdlDown: {
+    head:{x:110,y:38}, neck:{x:104,y:44}, shoulderL:{x:96,y:48}, shoulderR:{x:112,y:48},
+    elbowL:{x:92,y:62}, elbowR:{x:116,y:62}, handL:{x:90,y:74}, handR:{x:118,y:74},
+    hipL:{x:84,y:60}, hipR:{x:96,y:60}, kneeL:{x:82,y:78}, kneeR:{x:98,y:78}, footL:{x:80,y:92}, footR:{x:100,y:92}
+  },
+  // ── Goblet Squat (dumbbell held at chest) ────────────────────────────────
+  gobletUp: {
+    head:{x:90,y:28}, neck:{x:90,y:36}, shoulderL:{x:82,y:40}, shoulderR:{x:98,y:40},
+    elbowL:{x:78,y:50}, elbowR:{x:102,y:50}, handL:{x:86,y:44}, handR:{x:94,y:44},
+    hipL:{x:84,y:60}, hipR:{x:96,y:60}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  gobletDown: {
+    head:{x:90,y:40}, neck:{x:90,y:48}, shoulderL:{x:81,y:52}, shoulderR:{x:99,y:52},
+    elbowL:{x:74,y:58}, elbowR:{x:106,y:58}, handL:{x:86,y:52}, handR:{x:94,y:52},
+    hipL:{x:84,y:72}, hipR:{x:96,y:72}, kneeL:{x:82,y:86}, kneeR:{x:98,y:86}, footL:{x:80,y:92}, footR:{x:100,y:92}
+  },
+  // ── Band Pull Apart (standing, horizontal pull) ──────────────────────────
+  bandPullClose: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:78,y:42}, elbowR:{x:102,y:42}, handL:{x:82,y:42}, handR:{x:98,y:42},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  bandPullOpen: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:66,y:42}, elbowR:{x:114,y:42}, handL:{x:52,y:42}, handR:{x:128,y:42},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  // ── Band Row (standing, pull to waist) ───────────────────────────────────
+  bandRowFwd: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:78,y:50}, elbowR:{x:102,y:50}, handL:{x:76,y:56}, handR:{x:104,y:56},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  bandRowBack: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:72,y:46}, elbowR:{x:108,y:46}, handL:{x:80,y:52}, handR:{x:100,y:52},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  // ── Band Face Pull (pull to face level) ──────────────────────────────────
+  facePullFwd: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:78,y:42}, elbowR:{x:102,y:42}, handL:{x:76,y:48}, handR:{x:104,y:48},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  facePullBack: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:68,y:34}, elbowR:{x:112,y:34}, handL:{x:76,y:28}, handR:{x:104,y:28},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  // ── Band Pallof Press (anti-rotation press) ──────────────────────────────
+  pallofIn: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:80,y:50}, elbowR:{x:100,y:50}, handL:{x:88,y:48}, handR:{x:92,y:48},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  pallofOut: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:82,y:42}, elbowR:{x:98,y:42}, handL:{x:90,y:42}, handR:{x:90,y:42},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  // ── Band Bicep Curl (standing, band underfoot) ───────────────────────────
+  bandCurlDown: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:80,y:56}, elbowR:{x:100,y:56}, handL:{x:80,y:70}, handR:{x:100,y:70},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  bandCurlUp: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:80,y:56}, elbowR:{x:100,y:56}, handL:{x:82,y:44}, handR:{x:98,y:44},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  // ── Band Lateral Walk (mini-squat, side step) ────────────────────────────
+  latWalkL: {
+    head:{x:82,y:34}, neck:{x:82,y:42}, shoulderL:{x:74,y:46}, shoulderR:{x:90,y:46},
+    elbowL:{x:70,y:54}, elbowR:{x:94,y:54}, handL:{x:74,y:48}, handR:{x:90,y:48},
+    hipL:{x:76,y:64}, hipR:{x:88,y:64}, kneeL:{x:70,y:78}, kneeR:{x:92,y:78}, footL:{x:64,y:92}, footR:{x:96,y:92}
+  },
+  latWalkR: {
+    head:{x:98,y:34}, neck:{x:98,y:42}, shoulderL:{x:90,y:46}, shoulderR:{x:106,y:46},
+    elbowL:{x:86,y:54}, elbowR:{x:110,y:54}, handL:{x:90,y:48}, handR:{x:106,y:48},
+    hipL:{x:92,y:64}, hipR:{x:104,y:64}, kneeL:{x:88,y:78}, kneeR:{x:110,y:78}, footL:{x:84,y:92}, footR:{x:116,y:92}
+  },
+  // ── Floor Wiper (lying, legs side to side) ───────────────────────────────
+  floorWiperL: {
+    head:{x:130,y:76}, neck:{x:122,y:80}, shoulderL:{x:114,y:82}, shoulderR:{x:120,y:84},
+    elbowL:{x:108,y:76}, elbowR:{x:126,y:78}, handL:{x:102,y:72}, handR:{x:132,y:74},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:68,y:68}, kneeR:{x:74,y:70}, footL:{x:56,y:62}, footR:{x:62,y:64}
+  },
+  floorWiperR: {
+    head:{x:130,y:76}, neck:{x:122,y:80}, shoulderL:{x:114,y:82}, shoulderR:{x:120,y:84},
+    elbowL:{x:108,y:76}, elbowR:{x:126,y:78}, handL:{x:102,y:72}, handR:{x:132,y:74},
+    hipL:{x:86,y:82}, hipR:{x:92,y:84}, kneeL:{x:100,y:68}, kneeR:{x:106,y:70}, footL:{x:108,y:62}, footR:{x:114,y:64}
+  },
+  // ── Reverse Lunge (step back lunge) ──────────────────────────────────────
+  revLungeUp: {
+    head:{x:90,y:30}, neck:{x:90,y:38}, shoulderL:{x:82,y:42}, shoulderR:{x:98,y:42},
+    elbowL:{x:78,y:54}, elbowR:{x:102,y:54}, handL:{x:78,y:66}, handR:{x:102,y:66},
+    hipL:{x:84,y:62}, hipR:{x:96,y:62}, kneeL:{x:84,y:78}, kneeR:{x:96,y:78}, footL:{x:82,y:92}, footR:{x:98,y:92}
+  },
+  revLungeDown: {
+    head:{x:90,y:38}, neck:{x:90,y:46}, shoulderL:{x:82,y:50}, shoulderR:{x:98,y:50},
+    elbowL:{x:78,y:60}, elbowR:{x:102,y:60}, handL:{x:78,y:70}, handR:{x:102,y:70},
+    hipL:{x:84,y:68}, hipR:{x:96,y:68}, kneeL:{x:82,y:84}, kneeR:{x:106,y:86}, footL:{x:80,y:92}, footR:{x:118,y:92}
+  },
 };
 
 const POSES: Record<string, [Pose, Pose]> = {
@@ -331,6 +463,18 @@ const POSES: Record<string, [Pose, Pose]> = {
   calfraise: [P.calfLow, P.calfHigh],
   lateralraise: [P.latRaiseDown, P.latRaiseUp],
   jumpsquat: [P.jumpSquatDown, P.jumpSquatUp],
+  dbchestpress: [P.dbChestPressDown, P.dbChestPressUp],
+  dbfly: [P.dbFlyOpen, P.dbFlyClosed],
+  rdl: [P.rdlUp, P.rdlDown],
+  gobletsquat: [P.gobletUp, P.gobletDown],
+  bandpullapart: [P.bandPullClose, P.bandPullOpen],
+  bandrow: [P.bandRowFwd, P.bandRowBack],
+  bandfacepull: [P.facePullFwd, P.facePullBack],
+  bandpallof: [P.pallofIn, P.pallofOut],
+  bandbicepcurl: [P.bandCurlDown, P.bandCurlUp],
+  bandlateralwalk: [P.latWalkL, P.latWalkR],
+  floorwiper: [P.floorWiperL, P.floorWiperR],
+  reverselunge: [P.revLungeUp, P.revLungeDown],
 };
 
 const humanExercise = (kind: string, c: string, gender: Gender) => {
@@ -392,4 +536,16 @@ export const ILLUS: Record<ExerciseId, (c: string, gender: Gender) => React.Reac
   calfraise: (c, gender) => humanExercise("calfraise", c, gender),
   lateralraise: (c, gender) => humanExercise("lateralraise", c, gender),
   jumpsquat: (c, gender) => humanExercise("jumpsquat", c, gender),
+  dbchestpress: (c, gender) => humanExercise("dbchestpress", c, gender),
+  dbfly: (c, gender) => humanExercise("dbfly", c, gender),
+  rdl: (c, gender) => humanExercise("rdl", c, gender),
+  gobletsquat: (c, gender) => humanExercise("gobletsquat", c, gender),
+  bandpullapart: (c, gender) => humanExercise("bandpullapart", c, gender),
+  bandrow: (c, gender) => humanExercise("bandrow", c, gender),
+  bandfacepull: (c, gender) => humanExercise("bandfacepull", c, gender),
+  bandpallof: (c, gender) => humanExercise("bandpallof", c, gender),
+  bandbicepcurl: (c, gender) => humanExercise("bandbicepcurl", c, gender),
+  bandlateralwalk: (c, gender) => humanExercise("bandlateralwalk", c, gender),
+  floorwiper: (c, gender) => humanExercise("floorwiper", c, gender),
+  reverselunge: (c, gender) => humanExercise("reverselunge", c, gender),
 };

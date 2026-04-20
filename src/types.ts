@@ -4,6 +4,7 @@ export interface UserProfile {
   name: string;
   weight: number;
   height: number;
+  waistCm?: number | "";
   bodyFat: number | "";
   age: number;
   gender: "masculino" | "femenino";
@@ -38,7 +39,19 @@ export type ExerciseId =
   | "skater"
   | "calfraise"
   | "lateralraise"
-  | "jumpsquat";
+  | "jumpsquat"
+  | "dbchestpress"
+  | "dbfly"
+  | "rdl"
+  | "gobletsquat"
+  | "bandpullapart"
+  | "bandrow"
+  | "bandfacepull"
+  | "bandpallof"
+  | "bandbicepcurl"
+  | "bandlateralwalk"
+  | "floorwiper"
+  | "reverselunge";
 
 export interface ExerciseInfo {
   name: string;
@@ -111,6 +124,12 @@ export interface WorkoutResult {
   date: string;
 }
 
+// ─── Weight Log ──────────────────────────────────────────────────────────────
+export interface WeightEntry {
+  date: string;
+  weight: number;
+}
+
 // ─── App State ───────────────────────────────────────────────────────────────
 export type ThemeMode = "dark" | "light";
 
@@ -120,6 +139,7 @@ export interface AppState {
   historyByProfile: Record<string, WorkoutResult[]>;
   weeklyCalendarByProfile: Record<string, WeeklyCalendar>;
   customExercisesByProfile: Record<string, ExerciseId[]>;
+  weightLogByProfile: Record<string, WeightEntry[]>;
   themeMode: ThemeMode;
 }
 
@@ -168,6 +188,14 @@ export interface NutritionPlan {
   fats: number;
   focus: string;
   hydration: number;
+  trainingSummary: string;
+  mealStrategy: string;
+  preWorkout: string;
+  postWorkout: string;
+  carbBias: number;
+  proteinBias: number;
+  fatBias: number;
+  dominantStimulus: "fuerza" | "cardio" | "mixto";
 }
 
 export interface Objective {
@@ -176,6 +204,22 @@ export interface Objective {
   targetWeight: number;
   targetFat: number | null;
   professional: boolean;
+  /** Estimated current body fat % via Deurenberg formula */
+  estimatedBF: number;
+  /** Estimated current lean mass in kg */
+  leanMass: number;
+  /** BMI value */
+  bmi: number;
+  /** BMI category label */
+  bmiCategory: string;
+  /** Waist-to-height ratio when waist is available */
+  waistToHeightRatio: number | null;
+  /** Source used for the body-composition estimate */
+  compositionMethod: string;
+  /** Simple abdominal/metabolic risk label */
+  metabolicRisk: string;
+  /** Short explanation of the recommendation */
+  recommendation: string;
 }
 
 // ─── Meal Data ───────────────────────────────────────────────────────────────
@@ -197,6 +241,7 @@ export interface MealDay {
   day: string;
   meals: string;
   slots?: MealSlot[];
+  strategyLabel?: string;
 }
 
 export interface MealWeek {
@@ -204,6 +249,7 @@ export interface MealWeek {
   type: "omni" | "vegana";
   days: MealDay[];
   calorieLabel?: string;
+  strategyLabel?: string;
   baseCal?: number;
 }
 
