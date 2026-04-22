@@ -270,3 +270,137 @@ export const LOADABLE_EX: Partial<Record<ExerciseId, LoadableConfig>> = {
   gobletsquat: { intermedio: 10, avanzado: 20 },
   reverselunge: { intermedio: 6, avanzado: 14 },
 };
+
+// ── i18n translation helpers ──────────────────────────────────────────────────
+
+const EXERCISE_NAMES_EN: Partial<Record<ExerciseId, string>> = {
+  pushup: "Push-ups", squat: "Squats", lunge: "Lunges", plank: "Plank",
+  burpee: "Burpees", curl: "Bicep Curl", press: "Shoulder Press",
+  mtnclimber: "Mountain Climbers", jumpingjack: "Jumping Jacks",
+  hipbridge: "Hip Bridge", row: "Dumbbell Row", pullup: "Pull-ups",
+  superman: "Superman", dip: "Tricep Dips", tricepext: "Tricep Extension",
+  crunch: "Abs Crunch", russiantwist: "Russian Twist", highknees: "High Knees",
+  skater: "Skaters", calfraise: "Calf Raise", lateralraise: "Lateral Raise",
+  jumpsquat: "Jump Squat", dbchestpress: "DB Chest Press", dbfly: "DB Chest Fly",
+  rdl: "Romanian Deadlift", gobletsquat: "Goblet Squat",
+  bandpullapart: "Band Pull Apart", bandrow: "Band Row",
+  bandfacepull: "Band Face Pull", bandpallof: "Pallof Press",
+  bandbicepcurl: "Band Bicep Curl", bandlateralwalk: "Band Lateral Walk",
+  floorwiper: "Floor Wiper", reverselunge: "Reverse Lunge",
+};
+
+const EXERCISE_MUSCLES_EN: Partial<Record<ExerciseId, string>> = {
+  pushup: "Chest - Triceps", squat: "Quads - Glutes", lunge: "Legs - Glutes",
+  plank: "Core - Abs", burpee: "Full Body", curl: "Biceps - Forearms",
+  press: "Shoulders - Triceps", mtnclimber: "Core - Cardio",
+  jumpingjack: "Cardio - Full Body", hipbridge: "Glutes - Hamstrings",
+  row: "Back - Biceps", pullup: "Back - Biceps", superman: "Lower Back - Glutes",
+  dip: "Triceps - Chest", tricepext: "Triceps", crunch: "Abs",
+  russiantwist: "Obliques - Core", highknees: "Cardio - Quads",
+  skater: "Legs - Cardio", calfraise: "Calves", lateralraise: "Shoulders - Deltoids",
+  jumpsquat: "Legs - Cardio", dbchestpress: "Chest - Triceps", dbfly: "Chest",
+  rdl: "Hamstrings - Glutes", gobletsquat: "Quads - Glutes",
+  bandpullapart: "Upper Back - Rear Delts", bandrow: "Back - Biceps",
+  bandfacepull: "Rear Delts - Traps", bandpallof: "Core - Obliques",
+  bandbicepcurl: "Biceps", bandlateralwalk: "Glute Med - Abductors",
+  floorwiper: "Core - Obliques", reverselunge: "Legs - Glutes",
+};
+
+const WORKOUT_FOCUS_EN: Record<string, string> = {
+  "Empuje": "Push", "Tirón + Piernas": "Pull + Legs", "Cuerpo Completo": "Full Body",
+  "Empuje Pesado": "Heavy Push", "Tirón Pesado": "Heavy Pull", "Piernas + Core": "Legs + Core",
+  "Empuje Máximo": "Max Push", "Tirón Máximo": "Max Pull", "Piernas Pesadas": "Heavy Legs",
+  "Cardio Suave": "Light Cardio", "Cardio + Core": "Cardio + Core", "Mixto": "Mixed",
+  "HIIT Moderado": "Moderate HIIT", "Piernas Dinamicas": "Dynamic Legs",
+  "Full Circuit": "Full Circuit", "HIIT Explosivo": "Explosive HIIT",
+  "Circuito Total": "Total Circuit", "Cardio Core": "Cardio Core",
+  "Quema Suave": "Light Burn", "Circuito Bajo Impacto": "Low Impact Circuit",
+  "Cardio + Fuerza": "Cardio + Strength", "HIIT Quema Grasa": "Fat Burn HIIT",
+  "Circuito Cuerpo Completo": "Full Body Circuit", "Piernas + Cardio": "Legs + Cardio",
+  "HIIT Extremo": "Extreme HIIT", "Full Body Intenso": "Intense Full Body",
+  "Circuito Final": "Final Circuit", "Tren Superior": "Upper Body",
+  "Tren Inferior": "Lower Body", "Core + Cardio": "Core + Cardio",
+  "Empuje + Hombros": "Push + Shoulders", "Core Definido": "Defined Core",
+  "Upper Sculpt": "Upper Sculpt", "Lower Sculpt": "Lower Sculpt",
+  "Core + Full Body": "Core + Full Body",
+};
+
+const PLAN_NAMES_EN: Record<string, string> = {
+  "Fuerza - Principiante": "Strength - Beginner",
+  "Fuerza - Intermedio": "Strength - Intermediate",
+  "Fuerza - Avanzado": "Strength - Advanced",
+  "Cardio - Principiante": "Cardio - Beginner",
+  "Cardio - Intermedio": "Cardio - Intermediate",
+  "Cardio - Avanzado": "Cardio - Advanced",
+  "Pérdida - Principiante": "Weight Loss - Beginner",
+  "Pérdida - Intermedio": "Weight Loss - Intermediate",
+  "Pérdida - Avanzado": "Weight Loss - Advanced",
+  "Tonificación - Principiante": "Toning - Beginner",
+  "Tonificación - Intermedio": "Toning - Intermediate",
+  "Tonificación - Avanzado": "Toning - Advanced",
+};
+
+const PLAN_DESCS_EN: Record<string, string> = {
+  "Fuerza - Principiante": "Build a strength foundation with fewer reps, clean technique and longer rest periods.",
+  "Fuerza - Intermedio": "Fewer reps, more rest and progressive overload on compound patterns.",
+  "Fuerza - Avanzado": "Real strength block: short sets, long rests and maximum quality each rep.",
+  "Cardio - Principiante": "Improve your cardiovascular endurance with low-impact exercises.",
+  "Cardio - Intermedio": "Increase intensity with circuits and moderate HIIT.",
+  "Cardio - Avanzado": "High-intensity HIIT circuits for maximum endurance.",
+  "Pérdida - Principiante": "Burn calories progressively with accessible circuits.",
+  "Pérdida - Intermedio": "Intense HIIT and circuits to accelerate fat burning.",
+  "Pérdida - Avanzado": "Maximum calorie burn with high-intensity HIIT circuits.",
+  "Tonificación - Principiante": "Tone your whole body with balanced exercises.",
+  "Tonificación - Intermedio": "Greater definition with moderate volume and muscle variety.",
+  "Tonificación - Avanzado": "Sculpt and define with high-volume, controlled-rep circuits.",
+};
+
+const PLAN_WEEKS_EN: Record<string, string> = {
+  "Sem. 1-4": "Wk. 1-4", "Sem. 5-8": "Wk. 5-8", "Sem. 9+": "Wk. 9+",
+};
+
+const LEVEL_NAMES_EN = ["Beginner", "Intermediate", "Advanced"];
+
+const DIFFICULTY_LABELS_EN: Record<string, string> = {
+  ligero: "Light", normal: "Normal", intenso: "Intense",
+};
+
+export function translateExerciseName(id: string, lang = "es"): string {
+  if (lang === "en") return EXERCISE_NAMES_EN[id as ExerciseId] ?? EXDB[id as ExerciseId]?.name ?? id;
+  return EXDB[id as ExerciseId]?.name ?? id;
+}
+
+export function translateExerciseMuscle(id: string, lang = "es"): string {
+  if (lang === "en") return EXERCISE_MUSCLES_EN[id as ExerciseId] ?? EXDB[id as ExerciseId]?.muscle ?? "";
+  return EXDB[id as ExerciseId]?.muscle ?? "";
+}
+
+export function translateWorkoutFocus(focus: string, lang = "es"): string {
+  if (lang === "en") return WORKOUT_FOCUS_EN[focus] ?? focus;
+  return focus;
+}
+
+export function translatePlanName(name: string, lang = "es"): string {
+  if (lang === "en") return PLAN_NAMES_EN[name] ?? name;
+  return name;
+}
+
+export function translatePlanDesc(name: string, lang = "es"): string {
+  if (lang === "en") return PLAN_DESCS_EN[name] ?? name;
+  return name;
+}
+
+export function translatePlanWeeks(weeks: string, lang = "es"): string {
+  if (lang === "en") return PLAN_WEEKS_EN[weeks] ?? weeks;
+  return weeks;
+}
+
+export function getLevelNameI18n(level: number, lang = "es"): string {
+  if (lang === "en") return LEVEL_NAMES_EN[level] ?? "Unknown";
+  return LEVEL_NAMES[level] ?? "Desconocido";
+}
+
+export function translateDifficultyLabel(key: string, lang = "es"): string {
+  if (lang === "en") return DIFFICULTY_LABELS_EN[key] ?? key;
+  return DIFFICULTY[key as DifficultyKey]?.label ?? key;
+}

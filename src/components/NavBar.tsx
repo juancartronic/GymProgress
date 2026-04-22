@@ -1,11 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-
-const NAV_ITEMS: Array<{ to: string; label: string; icon: string }> = [
-  { to: "/dashboard", label: "Inicio", icon: "◉" },
-  { to: "/plans", label: "Planes", icon: "☰" },
-  { to: "/history", label: "Historial", icon: "◷" },
-];
+import { useTranslation } from "react-i18next";
 
 interface NavBarProps {
   hasUser: boolean;
@@ -14,7 +9,15 @@ interface NavBarProps {
 }
 
 export function NavBar({ hasUser, accent, muted }: NavBarProps) {
+  const { t } = useTranslation();
   if (!hasUser) return null;
+
+  const NAV_ITEMS = [
+    { to: "/dashboard", label: t("nav.home"), icon: "◉" },
+    { to: "/plans", label: t("nav.plans"), icon: "☰" },
+    { to: "/history", label: t("nav.history"), icon: "◷" },
+    { to: "/yo", label: t("nav.profile"), icon: "👤" },
+  ];
 
   return (
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--nav-bg)", borderTop: "1px solid var(--border-main)", display: "flex", zIndex: 99 }}>

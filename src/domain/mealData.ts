@@ -57,14 +57,15 @@ const rebuildMealsText = (slots?: MealSlot[]): string =>
 
 const WEEK_KEYS: DayKey[] = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"];
 
-const stateNutritionMultiplier = (state: string): { calories: number; carb: number; protein: number; fat: number; label: string } => {
+const stateNutritionMultiplier = (state: string, lang = "es"): { calories: number; carb: number; protein: number; fat: number; label: string } => {
+  const en = lang === "en";
   if (state === "entreno") {
-    return { calories: 1.06, carb: 1.14, protein: 1.03, fat: 0.96, label: "Dia alto en carbohidrato" };
+    return { calories: 1.06, carb: 1.14, protein: 1.03, fat: 0.96, label: en ? "High-carb day" : "Dia alto en carbohidrato" };
   }
   if (state === "recuperacion") {
-    return { calories: 0.98, carb: 0.96, protein: 1.01, fat: 1.01, label: "Dia medio de recuperacion" };
+    return { calories: 0.98, carb: 0.96, protein: 1.01, fat: 1.01, label: en ? "Moderate recovery day" : "Dia medio de recuperacion" };
   }
-  return { calories: 0.9, carb: 0.82, protein: 1.02, fat: 1.08, label: "Dia bajo en carbohidrato" };
+  return { calories: 0.9, carb: 0.82, protein: 1.02, fat: 1.08, label: en ? "Low-carb day" : "Dia bajo en carbohidrato" };
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -546,6 +547,218 @@ const MEAL_WEEKLY_TEMPLATES: Record<Goal, MealWeek[]> = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Localisation helpers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const FOOD_NAMES_EN: Record<string, string> = {
+  "Copos de avena": "Rolled oats",
+  "Plátano": "Banana",
+  "Leche entera": "Whole milk",
+  "Yogur griego": "Greek yoghurt",
+  "Nueces": "Walnuts",
+  "Pechuga de pollo": "Chicken breast",
+  "Arroz blanco cocido": "Cooked white rice",
+  "Ensalada mixta con aceite": "Mixed salad with oil",
+  "Pan integral": "Wholegrain bread",
+  "Pavo en lonchas": "Sliced turkey",
+  "Manzana": "Apple",
+  "Salmón a la plancha": "Grilled salmon",
+  "Patata cocida": "Boiled potato",
+  "Brócoli al vapor": "Steamed broccoli",
+  "Tostadas integrales": "Wholegrain toast",
+  "Tostada integral": "Wholegrain toast",
+  "Huevos revueltos (3)": "Scrambled eggs (3)",
+  "Huevos revueltos (2)": "Scrambled eggs (2)",
+  "Tomate natural": "Fresh tomato",
+  "Queso fresco": "Fresh cheese",
+  "Queso fresco desnatado": "Low-fat fresh cheese",
+  "Ternera magra": "Lean beef",
+  "Pasta integral cocida": "Cooked wholegrain pasta",
+  "Pasta integral": "Wholegrain pasta",
+  "Verduras salteadas con aceite": "Sautéed vegetables with oil",
+  "Merluza al horno": "Baked hake",
+  "Boniato asado": "Roasted sweet potato",
+  "Boniato": "Sweet potato",
+  "Judías verdes": "Green beans",
+  "Porridge de avena": "Oat porridge",
+  "Porridge avena": "Oat porridge",
+  "Frutos rojos": "Berries",
+  "Miel": "Honey",
+  "Leche": "Milk",
+  "Leche semidesnatada": "Semi-skimmed milk",
+  "Tortitas de arroz": "Rice cakes",
+  "Crema de cacahuete": "Peanut butter",
+  "Pavo al horno": "Baked turkey",
+  "Quinoa cocida": "Cooked quinoa",
+  "Calabacín con aceite": "Courgette with oil",
+  "Yogur natural": "Natural yoghurt",
+  "Almendras": "Almonds",
+  "Atún fresco a la plancha": "Grilled fresh tuna",
+  "Atún fresco": "Fresh tuna",
+  "Arroz blanco": "White rice",
+  "Ensalada verde con aceite": "Green salad with oil",
+  "Ensalada con aceite": "Salad with oil",
+  "Ensalada grande con aceite": "Large salad with oil",
+  "Ensalada completa con aceite": "Full salad with oil",
+  "Aguacate": "Avocado",
+  "Huevos cocidos (2)": "Boiled eggs (2)",
+  "Huevos cocidos (3)": "Boiled eggs (3)",
+  "Huevo cocido": "Boiled egg",
+  "Fruta variada": "Assorted fruit",
+  "Fruta de temporada": "Seasonal fruit",
+  "Muslo de pollo al horno": "Baked chicken thigh",
+  "Lentejas cocidas": "Cooked lentils",
+  "Zanahoria rallada": "Grated carrot",
+  "Zanahoria": "Carrot",
+  "Zanahoria y tomate": "Carrot and tomato",
+  "Requesón": "Cottage cheese",
+  "Requesón desnatado": "Low-fat cottage cheese",
+  "Lubina al horno": "Baked sea bass",
+  "Espárragos con aceite": "Asparagus with oil",
+  "Espárragos al vapor": "Steamed asparagus",
+  "Salmón al horno": "Baked salmon",
+  "Couscous cocido": "Cooked couscous",
+  "Brócoli con aceite": "Broccoli with oil",
+  "Granola": "Granola",
+  "Granola vegana": "Vegan granola",
+  "Pollo a la plancha": "Grilled chicken",
+  "Pechuga de pollo a la plancha": "Grilled chicken breast",
+  "Pimiento asado": "Roasted pepper",
+  "Tortilla francesa (3 huevos)": "Omelette (3 eggs)",
+  "Tortilla francesa (2 huevos)": "Omelette (2 eggs)",
+  "Tortilla de patatas (3 huevos)": "Spanish omelette (3 eggs)",
+  "Tortilla de verduras (3 huevos)": "Vegetable omelette (3 eggs)",
+  "Tortilla de verduras (2 huevos)": "Vegetable omelette (2 eggs)",
+  "Carne magra de cerdo": "Lean pork",
+  "Patatas al horno": "Roasted potatoes",
+  "Kiwi": "Kiwi",
+  "Emperador a la plancha": "Grilled swordfish",
+  "Pancakes de avena y plátano": "Oat and banana pancakes",
+  "Pancakes de avena": "Oat pancakes",
+  "Arroz con verduras": "Rice with vegetables",
+  "Batido: leche, avena, plátano": "Shake: milk, oats, banana",
+  "Frutos secos variados": "Assorted nuts",
+  "Frutos secos mix": "Mixed nuts",
+  "Pollo asado": "Roasted chicken",
+  "Jamón serrano": "Serrano ham",
+  "Jamón cocido bajo en grasa": "Low-fat cooked ham",
+  "Jamón cocido": "Cooked ham",
+  "Pavo": "Turkey",
+  "Pavo a la plancha": "Grilled turkey",
+  "Pepino": "Cucumber",
+  "Palitos de apio": "Celery sticks",
+  "Palitos de zanahoria": "Carrot sticks",
+  "Palitos de pepino": "Cucumber sticks",
+  "Tomates cherry": "Cherry tomatoes",
+  "Verduras al vapor": "Steamed vegetables",
+  "Verduras asadas con aceite": "Roasted vegetables with oil",
+  "Manzana troceada": "Diced apple",
+  "Plátano pequeño": "Small banana",
+  "Patata cocida pequeña": "Small boiled potato",
+  "Aceite de oliva": "Olive oil",
+  "Arroz integral cocido": "Cooked brown rice",
+  "Arroz integral": "Brown rice",
+  "Avena": "Oats",
+  "Pera": "Pear",
+  "Porridge con bebida de soja": "Porridge with soya drink",
+  "Bebida de soja": "Soya drink",
+  "Yogur vegetal de soja": "Soya plant yoghurt",
+  "Yogur vegetal": "Plant yoghurt",
+  "Tofu firme a la plancha": "Grilled firm tofu",
+  "Tofu firme salteado": "Sautéed firm tofu",
+  "Hummus": "Hummus",
+  "Tempeh a la plancha": "Grilled tempeh",
+  "Tempeh al vapor": "Steamed tempeh",
+  "Tofu revuelto": "Scrambled tofu",
+  "Tofu revuelto con especias": "Scrambled tofu with spices",
+  "Tofu revuelto con cúrcuma": "Scrambled tofu with turmeric",
+  "Edamame": "Edamame",
+  "Crackers integrales": "Wholegrain crackers",
+  "Seitán a la plancha": "Grilled seitan",
+  "Seitán al horno": "Baked seitan",
+  "Seitán al horno con verduras": "Baked seitan with vegetables",
+  "Seitán con verduras asadas": "Seitan with roasted vegetables",
+  "Garbanzos estofados": "Braised chickpeas",
+  "Garbanzos estofados con verduras": "Braised chickpeas with vegetables",
+  "Garbanzos con espinacas": "Chickpeas with spinach",
+  "Garbanzos al curry suave": "Mild chickpea curry",
+  "Espinacas salteadas con aceite": "Sautéed spinach with oil",
+  "Espinacas al vapor": "Steamed spinach",
+  "Avena con bebida de almendra": "Oats with almond drink",
+  "Bebida de almendra": "Almond drink",
+  "Heura al horno": "Baked Heura",
+  "Heura a la plancha": "Grilled Heura",
+  "Heura salteada": "Sautéed Heura",
+  "Lentejas guisadas": "Braised lentils",
+  "Lentejas estofadas": "Braised lentils",
+  "Lentejas al curry": "Lentil curry",
+  "Lentejas con arroz integral": "Lentils with brown rice",
+  "Tofu marinado al horno": "Baked marinated tofu",
+  "Tofu marinado": "Marinated tofu",
+  "Arroz basmati cocido": "Cooked basmati rice",
+  "Verduras al wok con aceite": "Wok vegetables with oil",
+  "Alubias estofadas": "Braised white beans",
+  "Alubias con verduras": "White beans with vegetables",
+  "Alubias con espinacas": "White beans with spinach",
+  "Tempeh al curry con verduras": "Tempeh curry with vegetables",
+  "Soja texturizada con tomate": "Textured soy with tomato",
+  "Porridge con soja": "Porridge with soya",
+  "Porridge con bebida vegetal": "Porridge with plant drink",
+  "Crema de almendras": "Almond butter",
+  "Avena con bebida de soja": "Oats with soya drink",
+  "Avena con soja": "Oats with soya",
+  "Bebida de avena": "Oat drink",
+  "Pancakes veganos (avena y plátano)": "Vegan pancakes (oats and banana)",
+  "Pancakes veganos": "Vegan pancakes",
+  "Sirope de agave": "Agave syrup",
+  "Batido vegetal: soja, avena, plátano": "Plant shake: soya, oats, banana",
+  "Zumo de naranja natural": "Fresh orange juice",
+  "Zumo de naranja": "Orange juice",
+};
+
+const SLOT_LABELS_EN: Record<string, string> = {
+  "Desayuno": "Breakfast",
+  "Almuerzo": "Morning snack",
+  "Comida": "Lunch",
+  "Merienda": "Afternoon snack",
+  "Cena": "Dinner",
+};
+
+const WEEK_TITLES_EN: Record<string, string> = {
+  "Fuerza – Semana completa": "Strength – Full week",
+  "Fuerza – Semana vegana": "Strength – Vegan week",
+  "Pérdida de peso – Semana completa": "Weight loss – Full week",
+  "Pérdida de peso – Semana vegana": "Weight loss – Vegan week",
+  "Cardio – Semana completa": "Cardio – Full week",
+  "Cardio – Semana vegana": "Cardio – Vegan week",
+  "Tonificación – Semana completa": "Toning – Full week",
+  "Tonificación – Semana vegana": "Toning – Vegan week",
+};
+
+const CATEGORY_NAMES_EN: Record<string, string> = {
+  "Proteínas animales": "Animal protein",
+  "Proteínas vegetales": "Plant protein",
+  "Lácteos y huevos": "Dairy & eggs",
+  "Cereales y legumbres": "Grains & legumes",
+  "Frutas": "Fruit",
+  "Verduras": "Vegetables",
+  "Grasas y frutos secos": "Fats & nuts",
+  "Otros": "Other",
+};
+
+export const translateFoodName = (name: string, lang: string): string =>
+  lang === "en" ? (FOOD_NAMES_EN[name] ?? name) : name;
+
+export const translateSlotLabel = (label: string, lang: string): string =>
+  lang === "en" ? (SLOT_LABELS_EN[label] ?? label) : label;
+
+export const translateCategory = (category: string, lang: string): string =>
+  lang === "en" ? (CATEGORY_NAMES_EN[category] ?? category) : category;
+
+export const translateWeekTitle = (title: string, lang: string): string =>
+  lang === "en" ? (WEEK_TITLES_EN[title] ?? title) : title;
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Public API
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -572,12 +785,14 @@ export const adaptMealWeekByNutrition = (
   week: MealWeek,
   nutrition: NutritionPlan,
   weeklyCalendar?: WeeklyCalendar,
+  lang = "es",
 ): MealWeek & { calorieLabel: string; strategyLabel: string } => {
+  const en = lang === "en";
   const baseCal = week.baseCal || nutrition.calories;
   const calorieFactor = Math.max(0.82, Math.min(1.18, nutrition.calories / Math.max(baseCal, 1)));
   const scaledDays = week.days.map((day, index) => {
     const calendarKey = WEEK_KEYS[index];
-    const cycle = stateNutritionMultiplier(weeklyCalendar?.[calendarKey] || "descanso");
+    const cycle = stateNutritionMultiplier(weeklyCalendar?.[calendarKey] || "descanso", lang);
     const slots = day.slots?.map(slot => ({
       ...slot,
       items: slot.items.map(item => {
@@ -604,18 +819,25 @@ export const adaptMealWeekByNutrition = (
     };
   });
 
-  const calorieLabel =
-    calorieFactor < 0.94
-      ? `Porciones ajustadas a ~${nutrition.calories} kcal/dia, recortando sobre todo almidones y grasas.`
-      : calorieFactor > 1.06
-        ? `Porciones ampliadas a ~${nutrition.calories} kcal/dia, priorizando carbohidrato util alrededor del entreno.`
-        : `Porciones centradas en ~${nutrition.calories} kcal/dia con distribucion equilibrada.`;
+  const calorieLabel = en
+    ? (calorieFactor < 0.94
+        ? `Portions adjusted to ~${nutrition.calories} kcal/day, cutting mainly starches and fats.`
+        : calorieFactor > 1.06
+          ? `Expanded portions to ~${nutrition.calories} kcal/day, prioritising useful carbs around training.`
+          : `Portions centred on ~${nutrition.calories} kcal/day with balanced distribution.`)
+    : (calorieFactor < 0.94
+        ? `Porciones ajustadas a ~${nutrition.calories} kcal/dia, recortando sobre todo almidones y grasas.`
+        : calorieFactor > 1.06
+          ? `Porciones ampliadas a ~${nutrition.calories} kcal/dia, priorizando carbohidrato util alrededor del entreno.`
+          : `Porciones centradas en ~${nutrition.calories} kcal/dia con distribucion equilibrada.`);
 
   return {
     ...week,
     days: scaledDays,
     calorieLabel,
-    strategyLabel: `${nutrition.mealStrategy} Ciclo semanal: entreno alto en carbohidrato, descanso mas contenido.`,
+    strategyLabel: en
+      ? `${nutrition.mealStrategy} Weekly cycle: training high-carb, rest more controlled.`
+      : `${nutrition.mealStrategy} Ciclo semanal: entreno alto en carbohidrato, descanso mas contenido.`,
   };
 };
 
@@ -678,28 +900,43 @@ export const getDaySnackRecommendation = (
   dayState: string,
   dominantStimulus: "fuerza" | "cardio" | "mixto",
   goal: string,
+  lang = "es",
 ): DaySnackRecommendation => {
+  const en = lang === "en";
+
   if (dayState === "descanso") {
     return {
       preWorkout: null,
       postWorkout: null,
-      dayLabel: "Dia de descanso",
-      tipText:
-        goal === "perdida"
-          ? "Sin entreno hoy. Reducir carbohidratos y priorizar verduras, proteina magra e hidratacion."
-          : "Sin entreno. Come ligero y prioriza la recuperacion muscular con proteinas de calidad y grasas saludables.",
+      dayLabel: en ? "Rest day" : "Dia de descanso",
+      tipText: en
+        ? (goal === "perdida"
+            ? "No training today. Cut carbs and prioritise vegetables, lean protein and hydration."
+            : "Rest day. Eat light and prioritise muscle recovery with quality protein and healthy fats.")
+        : (goal === "perdida"
+            ? "Sin entreno hoy. Reducir carbohidratos y priorizar verduras, proteina magra e hidratacion."
+            : "Sin entreno. Come ligero y prioriza la recuperacion muscular con proteinas de calidad y grasas saludables."),
     };
   }
 
   if (dayState === "recuperacion") {
     return {
       preWorkout: null,
-      postWorkout:
-        dominantStimulus === "fuerza"
-          ? { name: "Yogur griego con frutos rojos", timing: "30-60 min despues del entreno", macroHint: "~20 g proteina, carbohidrato de indice glucemico medio para reponer glucogeno" }
-          : { name: "Batido de platano con leche o bebida vegetal", timing: "30 min despues del entreno", macroHint: "~15-20 g proteina, carbohidrato rapido para reponer energia" },
-      dayLabel: "Dia de recuperacion activa",
-      tipText: "Entreno suave. Incluye alimentos antiinflamatorios (frutos rojos, salmon, jengibre) y asegurate de llegar a tu objetivo de proteina diario.",
+      postWorkout: dominantStimulus === "fuerza"
+        ? {
+            name: en ? "Greek yoghurt with berries" : "Yogur griego con frutos rojos",
+            timing: en ? "30-60 min after training" : "30-60 min despues del entreno",
+            macroHint: en ? "~20 g protein, medium-GI carb to replenish glycogen" : "~20 g proteina, carbohidrato de indice glucemico medio para reponer glucogeno",
+          }
+        : {
+            name: en ? "Banana shake with milk or plant drink" : "Batido de platano con leche o bebida vegetal",
+            timing: en ? "30 min after training" : "30 min despues del entreno",
+            macroHint: en ? "~15-20 g protein, fast carb to replenish energy" : "~15-20 g proteina, carbohidrato rapido para reponer energia",
+          },
+      dayLabel: en ? "Active recovery day" : "Dia de recuperacion activa",
+      tipText: en
+        ? "Light session. Include anti-inflammatory foods (berries, salmon, ginger) and hit your daily protein target."
+        : "Entreno suave. Incluye alimentos antiinflamatorios (frutos rojos, salmon, jengibre) y asegurate de llegar a tu objetivo de proteina diario.",
     };
   }
 
@@ -707,82 +944,105 @@ export const getDaySnackRecommendation = (
   if (dominantStimulus === "fuerza") {
     return {
       preWorkout: {
-        name:
-          goal === "perdida"
-            ? "Yogur griego con avena (pequeña porcion)"
-            : "Avena con leche y platano",
-        timing: "60-90 min antes del entreno",
-        macroHint:
-          goal === "perdida"
-            ? "~25 g proteina, ~30 g carbohidrato lento – energia sostenida sin exceso calorico"
-            : "~15 g proteina, ~50 g carbohidrato complejo – glucogeno muscular optimo",
+        name: en
+          ? (goal === "perdida" ? "Greek yoghurt with oats (small portion)" : "Oats with milk and banana")
+          : (goal === "perdida" ? "Yogur griego con avena (pequeña porcion)" : "Avena con leche y platano"),
+        timing: en ? "60-90 min before training" : "60-90 min antes del entreno",
+        macroHint: en
+          ? (goal === "perdida"
+              ? "~25 g protein, ~30 g slow carb – sustained energy without caloric excess"
+              : "~15 g protein, ~50 g complex carb – optimal muscle glycogen")
+          : (goal === "perdida"
+              ? "~25 g proteina, ~30 g carbohidrato lento – energia sostenida sin exceso calorico"
+              : "~15 g proteina, ~50 g carbohidrato complejo – glucogeno muscular optimo"),
       },
       postWorkout: {
-        name:
-          goal === "perdida"
-            ? "Pechuga de pavo o clara de huevo con arroz integral"
-            : "Batido de proteinas o yogur griego con fruta",
-        timing: "Dentro de los 30-45 min tras el entreno",
-        macroHint:
-          goal === "perdida"
-            ? "~35-40 g proteina, ~25 g carbohidrato – sintesis muscular sin superavit"
-            : "~30-40 g proteina, ~40-60 g carbohidrato rapido – ventana anabolica",
+        name: en
+          ? (goal === "perdida" ? "Turkey breast or egg whites with brown rice" : "Protein shake or Greek yoghurt with fruit")
+          : (goal === "perdida" ? "Pechuga de pavo o clara de huevo con arroz integral" : "Batido de proteinas o yogur griego con fruta"),
+        timing: en ? "Within 30-45 min after training" : "Dentro de los 30-45 min tras el entreno",
+        macroHint: en
+          ? (goal === "perdida"
+              ? "~35-40 g protein, ~25 g carb – muscle synthesis without surplus"
+              : "~30-40 g protein, ~40-60 g fast carb – anabolic window")
+          : (goal === "perdida"
+              ? "~35-40 g proteina, ~25 g carbohidrato – sintesis muscular sin superavit"
+              : "~30-40 g proteina, ~40-60 g carbohidrato rapido – ventana anabolica"),
       },
-      dayLabel: "Dia de fuerza",
-      tipText:
-        goal === "fuerza"
-          ? "Dia clave. Maximiza proteina total (1.8-2.2 g/kg) y no saltarte el snack post-entreno en los primeros 45 minutos."
-          : "Dia de fuerza. Ajusta porciones de carbohidratos al esfuerzo y prioriza la proteina post-entreno para preservar musculo.",
+      dayLabel: en ? "Strength day" : "Dia de fuerza",
+      tipText: en
+        ? (goal === "fuerza"
+            ? "Key day. Maximise total protein (1.8-2.2 g/kg) and don't skip the post-workout snack within the first 45 minutes."
+            : "Strength day. Adjust carb portions to the effort and prioritise post-workout protein to preserve muscle.")
+        : (goal === "fuerza"
+            ? "Dia clave. Maximiza proteina total (1.8-2.2 g/kg) y no saltarte el snack post-entreno en los primeros 45 minutos."
+            : "Dia de fuerza. Ajusta porciones de carbohidratos al esfuerzo y prioriza la proteina post-entreno para preservar musculo."),
     };
   }
 
   if (dominantStimulus === "cardio") {
     return {
       preWorkout: {
-        name:
-          goal === "perdida"
-            ? "Platano pequeno o puñado de datliles"
-            : "Tostada integral con mermelada o miel",
-        timing: "45-60 min antes del entreno",
-        macroHint:
-          goal === "perdida"
-            ? "~25-30 g carbohidrato rapido – energia para el esfuerzo sin lastrar la digestion"
-            : "~40-50 g carbohidrato, bajo en grasa – combustible rapido para rendimiento cardiovascular",
+        name: en
+          ? (goal === "perdida" ? "Small banana or a handful of dates" : "Wholegrain toast with jam or honey")
+          : (goal === "perdida" ? "Platano pequeno o puñado de datliles" : "Tostada integral con mermelada o miel"),
+        timing: en ? "45-60 min before training" : "45-60 min antes del entreno",
+        macroHint: en
+          ? (goal === "perdida"
+              ? "~25-30 g fast carb – energy for the effort without weighing down digestion"
+              : "~40-50 g carb, low fat – fast fuel for cardiovascular performance")
+          : (goal === "perdida"
+              ? "~25-30 g carbohidrato rapido – energia para el esfuerzo sin lastrar la digestion"
+              : "~40-50 g carbohidrato, bajo en grasa – combustible rapido para rendimiento cardiovascular"),
       },
       postWorkout: {
-        name:
-          goal === "perdida"
-            ? "Pechuga de pollo con ensalada y una pieza de fruta"
-            : "Arroz con atun o batido de recuperacion (proteina + carbohidrato)",
-        timing: "Dentro de los 45 min tras el entreno",
-        macroHint:
-          goal === "perdida"
-            ? "~30 g proteina, ~20-30 g carbohidrato – recuperacion con control calorico"
-            : "~20-25 g proteina, ~50-70 g carbohidrato – reponer glucogeno y reducir cortisol",
+        name: en
+          ? (goal === "perdida" ? "Chicken breast with salad and a piece of fruit" : "Rice with tuna or recovery shake (protein + carb)")
+          : (goal === "perdida" ? "Pechuga de pollo con ensalada y una pieza de fruta" : "Arroz con atun o batido de recuperacion (proteina + carbohidrato)"),
+        timing: en ? "Within 45 min after training" : "Dentro de los 45 min tras el entreno",
+        macroHint: en
+          ? (goal === "perdida"
+              ? "~30 g protein, ~20-30 g carb – recovery with calorie control"
+              : "~20-25 g protein, ~50-70 g carb – replenish glycogen and lower cortisol")
+          : (goal === "perdida"
+              ? "~30 g proteina, ~20-30 g carbohidrato – recuperacion con control calorico"
+              : "~20-25 g proteina, ~50-70 g carbohidrato – reponer glucogeno y reducir cortisol"),
       },
-      dayLabel: "Dia de cardio",
-      tipText:
-        goal === "cardio"
-          ? "Dia de resistencia. Carga bien de carbohidratos antes y repone con una combinacion proteina+carbohidrato nada mas acabar."
-          : "Sesion cardiovascular. Hidratate bien (0.5 L extra) y recuerda el snack post-cardio para evitar catabolismo muscular.",
+      dayLabel: en ? "Cardio day" : "Dia de cardio",
+      tipText: en
+        ? (goal === "cardio"
+            ? "Endurance day. Load up on carbs beforehand and replenish with a protein+carb combo right after."
+            : "Cardio session. Hydrate well (0.5 L extra) and remember the post-cardio snack to avoid muscle catabolism.")
+        : (goal === "cardio"
+            ? "Dia de resistencia. Carga bien de carbohidratos antes y repone con una combinacion proteina+carbohidrato nada mas acabar."
+            : "Sesion cardiovascular. Hidratate bien (0.5 L extra) y recuerda el snack post-cardio para evitar catabolismo muscular."),
     };
   }
 
   // mixto
   return {
     preWorkout: {
-      name: goal === "perdida" ? "Yogur griego con avena y frutos rojos" : "Avena, platano y una cucharada de crema de cacahuete",
-      timing: "60-90 min antes del entreno",
-      macroHint: "Carbohidrato complejo + proteina moderada + algo de grasa – energia estable para sesion combinada",
+      name: en
+        ? (goal === "perdida" ? "Greek yoghurt with oats and berries" : "Oats, banana and a tablespoon of peanut butter")
+        : (goal === "perdida" ? "Yogur griego con avena y frutos rojos" : "Avena, platano y una cucharada de crema de cacahuete"),
+      timing: en ? "60-90 min before training" : "60-90 min antes del entreno",
+      macroHint: en
+        ? "Complex carb + moderate protein + some fat – stable energy for combined session"
+        : "Carbohidrato complejo + proteina moderada + algo de grasa – energia estable para sesion combinada",
     },
     postWorkout: {
-      name: goal === "perdida" ? "Tortilla de claras con boniato" : "Arroz integral con pollo o tofu y aguacate",
-      timing: "30-45 min despues del entreno",
-      macroHint: "~30-40 g proteina, ~40-50 g carbohidrato, grasas saludables – recuperacion completa para estimulo mixto",
+      name: en
+        ? (goal === "perdida" ? "Egg-white omelette with sweet potato" : "Brown rice with chicken or tofu and avocado")
+        : (goal === "perdida" ? "Tortilla de claras con boniato" : "Arroz integral con pollo o tofu y aguacate"),
+      timing: en ? "30-45 min after training" : "30-45 min despues del entreno",
+      macroHint: en
+        ? "~30-40 g protein, ~40-50 g carb, healthy fats – full recovery for mixed stimulus"
+        : "~30-40 g proteina, ~40-50 g carbohidrato, grasas saludables – recuperacion completa para estimulo mixto",
     },
-    dayLabel: "Dia mixto (fuerza + cardio)",
-    tipText:
-      "Sesion combinada. Aumenta ligeramente las raciones de carbohidrato respecto a un dia de fuerza puro y asegurate de hidratarte bien durante el entrenamiento.",
+    dayLabel: en ? "Mixed day (strength + cardio)" : "Dia mixto (fuerza + cardio)",
+    tipText: en
+      ? "Combined session. Slightly increase carb portions compared to a pure strength day and stay well hydrated throughout."
+      : "Sesion combinada. Aumenta ligeramente las raciones de carbohidrato respecto a un dia de fuerza puro y asegurate de hidratarte bien durante el entrenamiento.",
   };
 };
 

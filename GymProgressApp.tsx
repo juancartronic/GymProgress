@@ -14,6 +14,7 @@ import { WorkoutDemo } from "./src/components/WorkoutDemo";
 import { ActiveWorkout } from "./src/components/ActiveWorkout";
 import { Summary } from "./src/components/Summary";
 import { History } from "./src/components/History";
+import { ProfileView } from "./src/components/ProfileView";
 import { PageTransition } from "./src/components/PageTransition";
 import { DashboardSkeleton } from "./src/components/Skeleton";
 import { AnimatePresence } from "framer-motion";
@@ -104,46 +105,6 @@ export default function App(){
     >
       <style>{APP_GLOBAL_CSS}</style>
       <Toaster position="top-center" toastOptions={{style:{background:"#1e1e2e",color:"#f0f0f0",borderRadius:12,fontSize:14}}} />
-      <button
-        onClick={()=>dispatch({type:"TOGGLE_THEME"})}
-        aria-label={themeMode==="dark"?"Cambiar a modo dia":"Cambiar a modo noche"}
-        title={themeMode==="dark"?"Modo dia":"Modo noche"}
-        style={{
-          position:"fixed",
-          top:10,
-          right:10,
-          zIndex:120,
-          width:46,
-          height:26,
-          borderRadius:999,
-          border:`1px solid ${theme.border}`,
-          background:themeMode==="dark"?"#1c1f2e":"#e9eef7",
-          cursor:"pointer",
-          padding:2,
-          display:"flex",
-          alignItems:"center",
-          justifyContent:themeMode==="dark"?"flex-end":"flex-start",
-          transition:"all .18s ease",
-        }}
-      >
-        <span
-          style={{
-            width:20,
-            height:20,
-            borderRadius:"50%",
-            background:themeMode==="dark"?"#f3f6fb":"#111827",
-            color:themeMode==="dark"?"#111827":"#f3f6fb",
-            display:"inline-flex",
-            alignItems:"center",
-            justifyContent:"center",
-            fontSize:11,
-            lineHeight:1,
-            transition:"all .18s ease",
-          }}
-        >
-          {themeMode==="dark"?"☀":"☾"}
-        </span>
-      </button>
       {/* Route-based screens */}
       <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -286,6 +247,37 @@ export default function App(){
             <Summary result={workoutResult} user={user} onContinue={()=>navigate("/dashboard")}/>
             </PageTransition>
           ) : <Navigate to="/dashboard" replace />
+        }/>
+        <Route path="/yo" element={
+          user ? (
+            <PageTransition>
+            <ProfileView
+              user={user}
+              profiles={profiles}
+              activeProfileId={activeProfileId}
+              themeMode={themeMode}
+              weightLog={user ? (weightLogByProfile[user.id] || []) : []}
+              onSwitchProfile={(id)=>dispatch({type:"SWITCH_PROFILE",payload:id})}
+              onAddProfile={()=>{dispatch({type:"SET_EDITING_PROFILE",payload:null});navigate("/profile");}}
+              onEditProfile={()=>{dispatch({type:"SET_EDITING_PROFILE",payload:activeProfileId});navigate("/profile");}}
+              onDeleteProfile={()=>{
+                if(!user)return;
+                const ok=window.confirm(`¿Eliminar el perfil ${user.name}? Esta accion borrara su historial y calendario.`);
+                if(!ok)return;
+                dispatch({type:"DELETE_PROFILE",payload:user.id});
+                toast.success("Perfil eliminado");
+                if(profiles.filter(p=>p.id!==user.id).length===0) navigate("/onboarding");
+              }}
+              onImportData={(s)=>dispatch({type:"IMPORT_STATE",payload:s})}
+              onLogWeight={(w)=>{
+                if(!user)return;
+                dispatch({type:"LOG_WEIGHT",payload:{userId:user.id,entry:{date:new Date().toISOString().slice(0,10),weight:w}}});
+                toast.success(`Peso actualizado: ${w} kg`);
+              }}
+              onToggleTheme={()=>dispatch({type:"TOGGLE_THEME"})}
+            />
+            </PageTransition>
+          ) : <Navigate to="/onboarding" replace />
         }/>
         <Route path="*" element={<Navigate to={user?"/dashboard":"/onboarding"} replace />}/>
       </Routes>

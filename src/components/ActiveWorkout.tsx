@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { S } from "../theme/styles";
-import { EXDB, EX_TIPS, DIFFICULTY } from "../domain/data";
+import { EXDB, EX_TIPS, DIFFICULTY, translateExerciseName, translateExerciseMuscle } from "../domain/data";
 import { scaleWorkout, applyProfessionalProgression, calcCalories, fmtTime } from "../domain/workout";
 import { ILLUS } from "./Illustrations";
 import { ProgressBar } from "./ProgressBar";
@@ -16,6 +17,7 @@ interface ActiveWorkoutProps {
 }
 
 export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "normal", onFinish, onCancel }: ActiveWorkoutProps) {
+  const { t, i18n } = useTranslation();
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0);
   const [phase, setPhase] = useState<"exercise" | "rest">("exercise");
@@ -81,11 +83,11 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "es-ES";
+      utterance.lang = i18n.language === "en" ? "en-US" : "es-ES";
       utterance.rate = 1;
       window.speechSynthesis.speak(utterance);
     } catch {}
-  }, [voiceOn]);
+  }, [voiceOn, i18n.language]);
 
   // Actualiza el handler de comandos en cada render para tener closures frescas
   useEffect(() => {
@@ -104,7 +106,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!listenOn || !SR) { try { recognitionRef.current?.stop(); } catch {} recognitionRef.current = null; return; }
     const rec = new SR();
-    rec.lang = "es-ES"; rec.continuous = true; rec.interimResults = false;
+    rec.lang = i18n.language === "en" ? "en-US" : "es-ES"; rec.continuous = true; rec.interimResults = false;
     rec.onresult = (ev: SpeechRecognitionEvent) => {
       const last = ev.results[ev.results.length - 1][0].transcript;
       handleVoiceCmdRef.current?.(last);
@@ -125,7 +127,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
       if (exIdx + 1 < workoutScaled.exercises.length) { setExIdx(i => i + 1); setSetIdx(0); setPhase("exercise"); }
       else {
         const minutes = Math.max(1, Math.floor((Date.now() - startTime.current) / 60000));
-        speak("Entrenamiento completado. Buen trabajo.");
+        speak(t("activeWorkout.workoutDone"));
         onFinish({
           workout: workoutScaled,
           baseWorkout: workout,
@@ -159,9 +161,9 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
 
   useEffect(() => {
     if (!ex || phase !== "exercise") return;
-    const unit = ex.isTime ? "segundos" : "repeticiones";
-    const cue = EX_TIPS[ex.id]?.cue ? ` Consejo: ${EX_TIPS[ex.id].cue}` : "";
-    speak(`${EXDB[ex.id]?.name || "Ejercicio"}. Serie ${setIdx+1} de ${ex.sets}. ${ex.reps} ${unit}.${cue}`);
+    const unit = ex.isTime ? t("activeWorkout.seconds") : t("activeWorkout.reps");
+    const cue = EX_TIPS[ex.id]?.cue ? ` ${t("activeWorkout.tip")}: ${EX_TIPS[ex.id].cue}` : "";
+    speak(`${EXDB[ex.id]?.name || t("activeWorkout.exercise")}. ${t("activeWorkout.set")} ${setIdx+1} ${t("activeWorkout.of")} ${ex.sets}. ${ex.reps} ${unit}.${cue}`);
   }, [ex, phase, setIdx, speak]);
 
   const startRest = () => {
@@ -169,7 +171,7 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
     setPhase("rest");
     setTimer(ex.rest);
     feedback("rest");
-    speak(`Descanso ${ex.rest} segundos.`);
+    speak(`${t("activeWorkout.rest")} ${ex.rest} ${t("activeWorkout.seconds")}.`);
   };
 
   if (!ex) return null;
@@ -177,13 +179,13 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
   return (
     <div style={{ ...S.container, paddingTop:20 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-        <button onClick={onCancel} style={{ background:"none", border:"none", color:S.muted, cursor:"pointer", fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>✕ Cancelar</button>
+        <button onClick={onCancel} style={{ background:"none", border:"none", color:S.muted, cursor:"pointer", fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>✕ {t("activeWorkout.cancel")}</button>
         <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:S.muted }}>{fmtTime(elapsed)}</div>
       </div>
       <div style={{ ...S.card, padding:"12px", marginBottom:12, display:"flex", flexDirection:"column", gap:10 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
-          <span style={{ fontSize:11, color:S.muted, textTransform:"uppercase", letterSpacing:"0.08em" }}>Dificultad del entrenamiento</span>
-          <span style={{ fontSize:11, color:lockDifficulty ? S.orange : S.muted }}>{lockDifficulty ? "bloqueada en progreso" : "editable antes de iniciar"}</span>
+          <span style={{ fontSize:11, color:S.muted, textTransform:"uppercase", letterSpacing:"0.08em" }}>{t("activeWorkout.difficultyLabel")}</span>
+          <span style={{ fontSize:11, color:lockDifficulty ? S.orange : S.muted }}>{lockDifficulty ? t("activeWorkout.difficultyLocked") : t("activeWorkout.difficultyEditable")}</span>
         </div>
         <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           {(Object.entries(DIFFICULTY) as [DifficultyKey, { label: string }][]).map(([k, v]) => (
@@ -194,18 +196,18 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
           ))}
         </div>
         <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-          <button onClick={() => setSoundOn(v => !v)} style={{ ...S.btn(soundOn ? "var(--sound-on-bg)" : "var(--inactive-btn-bg)", soundOn ? S.accent : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{soundOn ? "♪ Sonido ON" : "- Sonido OFF"}</button>
-          <button onClick={() => setVibrateOn(v => !v)} style={{ ...S.btn(vibrateOn ? "var(--vibrate-on-bg)" : "var(--inactive-btn-bg)", vibrateOn ? "#ffb266" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{vibrateOn ? "Vibracion ON" : "Vibracion OFF"}</button>
-          <button onClick={() => setVoiceOn(v => !v)} style={{ ...S.btn(voiceOn ? "#2a2f4a" : "var(--inactive-btn-bg)", voiceOn ? "#bcd3ff" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{voiceOn ? "Voz ON" : "Voz OFF"}</button>
-          {(window.SpeechRecognition || window.webkitSpeechRecognition) && <button onClick={() => setListenOn(v => !v)} style={{ ...S.btn(listenOn ? "#1a3a2a" : "var(--inactive-btn-bg)", listenOn ? "#7de8b8" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:`1px solid ${listenOn ? "#7de8b8" : "var(--border-main)"}` }}>{listenOn ? "🎙 Libres ON" : "🎙 Libres OFF"}</button>}
+          <button onClick={() => setSoundOn(v => !v)} style={{ ...S.btn(soundOn ? "var(--sound-on-bg)" : "var(--inactive-btn-bg)", soundOn ? S.accent : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{soundOn ? t("activeWorkout.soundOn") : t("activeWorkout.soundOff")}</button>
+          <button onClick={() => setVibrateOn(v => !v)} style={{ ...S.btn(vibrateOn ? "var(--vibrate-on-bg)" : "var(--inactive-btn-bg)", vibrateOn ? "#ffb266" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{vibrateOn ? t("activeWorkout.vibrateOn") : t("activeWorkout.vibrateOff")}</button>
+          <button onClick={() => setVoiceOn(v => !v)} style={{ ...S.btn(voiceOn ? "#2a2f4a" : "var(--inactive-btn-bg)", voiceOn ? "#bcd3ff" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}>{voiceOn ? t("activeWorkout.voiceOn") : t("activeWorkout.voiceOff")}</button>
+          {(window.SpeechRecognition || window.webkitSpeechRecognition) && <button onClick={() => setListenOn(v => !v)} style={{ ...S.btn(listenOn ? "#1a3a2a" : "var(--inactive-btn-bg)", listenOn ? "#7de8b8" : "var(--text-muted)"), padding:"8px 12px", fontSize:12, border:`1px solid ${listenOn ? "#7de8b8" : "var(--border-main)"}` }}>{listenOn ? t("activeWorkout.freeHandsOn") : t("activeWorkout.freeHandsOff")}</button>}
         </div>
       </div>
       <ProgressBar value={(doneSets / totalSets) * 100} max={100} height={4} />
       <div style={{ display:"flex", justifyContent:"space-between", margin:"6px 0 12px", fontSize:11, color:S.muted }}>
-        <span>Ej {exIdx+1} / {workoutScaled.exercises.length}</span>
-        <span>{Math.round((doneSets / totalSets) * 100)}% completado</span>
+        <span>{t("activeWorkout.exercise")} {exIdx+1} / {workoutScaled.exercises.length}</span>
+        <span>{Math.round((doneSets / totalSets) * 100)}% {t("activeWorkout.completed")}</span>
       </div>
-      {listenOn && <div style={{ textAlign:"center", fontSize:11, color:"#7de8b8", marginBottom:12, letterSpacing:"0.06em" }}>🎙 Manos libres activo — di <strong>"siguiente"</strong> o <strong>"saltar"</strong></div>}
+      {listenOn && <div style={{ textAlign:"center", fontSize:11, color:"#7de8b8", marginBottom:12, letterSpacing:"0.06em" }}>🎤 {t("activeWorkout.handsActive")}</div>}
       {phase === "exercise" ? (
         <>
           <div style={{ background:"var(--surface-soft)", borderRadius:20, padding:24, marginBottom:20, display:"flex", justifyContent:"center", height:210, alignItems:"center", overflow:"hidden" }}>
@@ -213,47 +215,47 @@ export function ActiveWorkout({ workout, user, planLevel, initialDifficulty = "n
           </div>
           <div style={{ textAlign:"center", marginBottom:24 }}>
             <span style={S.pill(info.tag === "HIIT" ? S.orange : S.accent)}>{info.tag}</span>
-            <h2 style={{ ...S.heading, fontSize:38, margin:"10px 0 4px" }}>{info.name.toUpperCase()}</h2>
-            <p style={{ color:S.muted, margin:"0 0 20px", fontSize:13 }}>{info.muscle}</p>
+            <h2 style={{ ...S.heading, fontSize:38, margin:"10px 0 4px" }}>{translateExerciseName(ex.id, i18n.language).toUpperCase()}</h2>
+            <p style={{ color:S.muted, margin:"0 0 20px", fontSize:13 }}>{translateExerciseMuscle(ex.id, i18n.language)}</p>
             <div style={{ ...S.card, padding:"12px 14px", margin:"0 auto 20px", maxWidth:420, textAlign:"left", background:"var(--tip-card-bg)", border:"1px solid var(--tip-card-border)" }}>
-              <div style={{ fontSize:11, color:S.accent, marginBottom:4, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" }}>Tip rapido</div>
+              <div style={{ fontSize:11, color:S.accent, marginBottom:4, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" }}>{t("activeWorkout.tip")}</div>
               <div style={{ fontSize:13, marginBottom:4 }}>• {EX_TIPS[ex.id]?.cue}</div>
-              <div style={{ fontSize:12, color:S.muted }}>Evita: {EX_TIPS[ex.id]?.mistake}</div>
+              <div style={{ fontSize:12, color:S.muted }}>{t("activeWorkout.avoid")} {EX_TIPS[ex.id]?.mistake}</div>
             </div>
             <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
               <div style={{ ...S.card, padding:"16px 28px", textAlign:"center" }}>
                 <div style={{ ...S.heading, fontSize:40, color:S.accent, lineHeight:1 }}>{ex.reps}</div>
-                <div style={{ fontSize:12, color:S.muted }}>{ex.isTime ? "segundos" : "repeticiones"}</div>
+                <div style={{ fontSize:12, color:S.muted }}>{ex.isTime ? t("activeWorkout.seconds") : t("activeWorkout.reps")}</div>
               </div>
               <div style={{ ...S.card, padding:"16px 28px", textAlign:"center" }}>
                 <div style={{ ...S.heading, fontSize:40, lineHeight:1 }}>{setIdx+1}<span style={{ fontSize:22, color:S.muted }}>/{ex.sets}</span></div>
-                <div style={{ fontSize:12, color:S.muted }}>serie</div>
+                <div style={{ fontSize:12, color:S.muted }}>{t("activeWorkout.set")}</div>
               </div>
             </div>
             {ex.loadKg ? (
-              <p style={{ margin:"12px 0 0", fontSize:12, color:"#9ecfff" }}>Carga recomendada: {ex.loadKg} kg total.</p>
+              <p style={{ margin:"12px 0 0", fontSize:12, color:"#9ecfff" }}>{t("activeWorkout.load")} {ex.loadKg} kg.</p>
             ) : null}
           </div>
           <button onClick={startRest} style={{ ...S.btn(S.accent), width:"100%", justifyContent:"center", fontSize:17, padding:18 }}>
-            Serie Completada
+            {t("activeWorkout.setDone")}
           </button>
         </>
       ) : (
         <div style={{ textAlign:"center", paddingTop:20 }}>
           <div style={{ ...S.card, marginBottom:24, padding:40 }}>
-            <p style={{ color:S.muted, margin:"0 0 8px", fontSize:13, textTransform:"uppercase", letterSpacing:"0.1em" }}>Descanso</p>
+            <p style={{ color:S.muted, margin:"0 0 8px", fontSize:13, textTransform:"uppercase", letterSpacing:"0.1em" }}>{t("activeWorkout.rest")}</p>
             <div style={{ ...S.heading, fontSize:88, color:S.orange, lineHeight:1, marginBottom:12 }}>{timer}</div>
-            <p style={{ color:S.muted, margin:0, fontSize:13 }}>segundos restantes</p>
+            <p style={{ color:S.muted, margin:0, fontSize:13 }}>{t("activeWorkout.secondsLeft")}</p>
             <div style={{ marginTop:20 }}><ProgressBar value={ex.rest - timer} max={ex.rest} color={S.orange} height={8} /></div>
           </div>
           {setIdx + 1 < ex.sets
-            ? <p style={{ color:S.muted, fontSize:14 }}>Proxima: <strong style={{ color:"#f0f0f0" }}>Serie {setIdx+2} de {ex.sets}</strong></p>
+            ? <p style={{ color:S.muted, fontSize:14 }}>{t("activeWorkout.nextSet")}: <strong style={{ color:"#f0f0f0" }}>{t("activeWorkout.set")} {setIdx+2} {t("activeWorkout.of")} {ex.sets}</strong></p>
             : exIdx + 1 < workoutScaled.exercises.length
-              ? <p style={{ color:S.muted, fontSize:14 }}>Siguiente: <strong style={{ color:S.accent }}>{EXDB[workoutScaled.exercises[exIdx+1].id].name}</strong></p>
-              : <p style={{ color:S.accent, fontSize:14, fontWeight:600 }}>Ultimo ejercicio terminado!</p>
+              ? <p style={{ color:S.muted, fontSize:14 }}>{t("activeWorkout.nextExercise")}: <strong style={{ color:S.accent }}>{translateExerciseName(workoutScaled.exercises[exIdx+1].id, i18n.language)}</strong></p>
+              : <p style={{ color:S.accent, fontSize:14, fontWeight:600 }}>{t("activeWorkout.lastDone")}</p>
           }
           <button onClick={() => { if (iRef.current) clearInterval(iRef.current); nextSet(); }} style={{ ...S.btn("#1e1e2e", S.muted), marginTop:16, justifyContent:"center" }}>
-            Saltar descanso
+            {t("activeWorkout.skipRest")}
           </button>
         </div>
       )}

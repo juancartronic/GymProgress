@@ -104,8 +104,10 @@ const analyzePlanDemand = (plan: Partial<Plan> | null | undefined, fallbackSessi
   };
 };
 
-const dominantStimulusLabel = (value: PlanDemand["dominantStimulus"]): string =>
-  value === "fuerza" ? "predominio de fuerza" : value === "cardio" ? "predominio de cardio/HIIT" : "estimulo mixto";
+const dominantStimulusLabel = (value: PlanDemand["dominantStimulus"], lang = "es"): string => {
+  if (lang === "en") return value === "fuerza" ? "strength-dominant" : value === "cardio" ? "cardio/HIIT-dominant" : "mixed stimulus";
+  return value === "fuerza" ? "predominio de fuerza" : value === "cardio" ? "predominio de cardio/HIIT" : "estimulo mixto";
+};
 
 // ─── Body composition helpers ───────────────────────────────────────────────
 
@@ -123,10 +125,20 @@ const estimateBFPercent = (bmi: number, age: number, isMale: boolean): number =>
 const estimateRFMPercent = (heightCm: number, waistCm: number, isMale: boolean): number =>
   clamp((isMale ? 64 : 76) - 20 * (heightCm / waistCm), 4, 60);
 
-const bmiCategory = (bmi: number): string =>
-  bmi < 18.5 ? "Bajo peso" : bmi < 25 ? "Peso normal" : bmi < 30 ? "Sobrepeso" : "Obesidad";
+const bmiCategory = (bmi: number, lang = "es"): string => {
+  if (lang === "en") return bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal weight" : bmi < 30 ? "Overweight" : "Obesity";
+  return bmi < 18.5 ? "Bajo peso" : bmi < 25 ? "Peso normal" : bmi < 30 ? "Sobrepeso" : "Obesidad";
+};
 
-const metabolicRiskLabel = (waistToHeightRatio: number | null, bmi: number): string => {
+const metabolicRiskLabel = (waistToHeightRatio: number | null, bmi: number, lang = "es"): string => {
+  if (lang === "en") {
+    if (waistToHeightRatio !== null) {
+      if (waistToHeightRatio < 0.5) return "Low abdominal risk";
+      if (waistToHeightRatio < 0.6) return "Moderate abdominal risk";
+      return "High abdominal risk";
+    }
+    return bmi < 25 ? "Low metabolic risk" : bmi < 30 ? "Moderate metabolic risk" : "High metabolic risk";
+  }
   if (waistToHeightRatio !== null) {
     if (waistToHeightRatio < 0.5) return "Riesgo abdominal bajo";
     if (waistToHeightRatio < 0.6) return "Riesgo abdominal moderado";
@@ -152,7 +164,7 @@ const leanGainFactor = (goal: string): number => {
 
 /** Computes fitness objective (phase, target weight/fat, timeline) based on user profile and plan level.
  *  Uses BMI → estimated BF% → lean mass to set intelligent, personalized goals. */
-export const buildObjective = (user: Partial<UserProfile> | null | undefined, planLevel: number): Objective => {
+export const buildObjective = (user: Partial<UserProfile> | null | undefined, planLevel: number, lang = "es"): Objective => {
   const weight   = Number(user?.weight)  || 70;
   const heightCm = Number(user?.height)  || 170;
   const age      = Number(user?.age)     || 30;
@@ -163,14 +175,20 @@ export const buildObjective = (user: Partial<UserProfile> | null | undefined, pl
   const userBF   = user?.bodyFat ? Number(user.bodyFat) : null;
 
   const horizonWeeks = planLevel === 0 ? 8 : planLevel === 1 ? 12 : 16;
-  const phase = planLevel === 0 ? "Base tecnica" : planLevel === 1 ? "Sobrecarga progresiva" : "Rendimiento avanzado";
+  const phase = lang === "en"
+    ? (planLevel === 0 ? "Technical Base" : planLevel === 1 ? "Progressive Overload" : "Advanced Performance")
+    : (planLevel === 0 ? "Base tecnica" : planLevel === 1 ? "Sobrecarga progresiva" : "Rendimiento avanzado");
 
   // 1. BMI & estimated body fat
   const bmi = calcBMI(weight, heightCm);
   const waistToHeightRatio = waistCm ? calcWaistToHeightRatio(waistCm, heightCm) : null;
   const estimatedBF = userBF ?? (waistCm ? estimateRFMPercent(heightCm, waistCm, isMale) : estimateBFPercent(bmi, age, isMale));
-  const compositionMethod = userBF ? "Grasa corporal indicada" : waistCm ? "Estimacion RFM con cintura" : "Estimacion BMI/edad (Deurenberg)";
-  const metabolicRisk = metabolicRiskLabel(waistToHeightRatio, bmi);
+  const compositionMethod = userBF
+    ? (lang === "en" ? "Body fat indicated" : "Grasa corporal indicada")
+    : waistCm
+      ? (lang === "en" ? "RFM estimation with waist" : "Estimacion RFM con cintura")
+      : (lang === "en" ? "BMI/age estimation (Deurenberg)" : "Estimacion BMI/edad (Deurenberg)");
+  const metabolicRisk = metabolicRiskLabel(waistToHeightRatio, bmi, lang);
   const leanMass = weight * (1 - estimatedBF / 100);
 
   // 2. Target body fat % — approach ideal gradually (max ~40% improvement per plan cycle)
@@ -192,19 +210,34 @@ export const buildObjective = (user: Partial<UserProfile> | null | undefined, pl
   // 5. Build human‑readable recommendation
   let recommendation: string;
   const diff = weight - targetWeight;
-  if (diff > 3) {
-    recommendation = `Reducir ${diff.toFixed(1)} kg de grasa manteniendo ${targetLean.toFixed(1)} kg de masa magra.`;
-  } else if (diff < -1) {
-    recommendation = `Ganar ${Math.abs(diff).toFixed(1)} kg de masa muscular con bajo aumento de grasa.`;
+  if (lang === "en") {
+    if (diff > 3) {
+      recommendation = `Reduce ${diff.toFixed(1)} kg of fat while preserving ${targetLean.toFixed(1)} kg of lean mass.`;
+    } else if (diff < -1) {
+      recommendation = `Gain ${Math.abs(diff).toFixed(1)} kg of muscle with minimal fat gain.`;
+    } else {
+      recommendation = `Body recomposition: reduce fat and maintain/gain muscle at the same weight.`;
+    }
+    if (bmi >= 30 && goal === "fuerza") {
+      recommendation = `Prioritize fat loss before targeting maximum strength. ` + recommendation;
+    }
+    if (waistToHeightRatio !== null && waistToHeightRatio >= 0.6) {
+      recommendation = `Abdominal fat is a priority for health and performance. ` + recommendation;
+    }
   } else {
-    recommendation = `Recomposicion corporal: reducir grasa y mantener/ganar musculo en el mismo peso.`;
-  }
-
-  if (bmi >= 30 && goal === "fuerza") {
-    recommendation = `Priorizar perdida de grasa corporal antes de buscar fuerza maxima. ` + recommendation;
-  }
-  if (waistToHeightRatio !== null && waistToHeightRatio >= 0.6) {
-    recommendation = `La grasa abdominal es prioritaria por salud y rendimiento. ` + recommendation;
+    if (diff > 3) {
+      recommendation = `Reducir ${diff.toFixed(1)} kg de grasa manteniendo ${targetLean.toFixed(1)} kg de masa magra.`;
+    } else if (diff < -1) {
+      recommendation = `Ganar ${Math.abs(diff).toFixed(1)} kg de masa muscular con bajo aumento de grasa.`;
+    } else {
+      recommendation = `Recomposicion corporal: reducir grasa y mantener/ganar musculo en el mismo peso.`;
+    }
+    if (bmi >= 30 && goal === "fuerza") {
+      recommendation = `Priorizar perdida de grasa corporal antes de buscar fuerza maxima. ` + recommendation;
+    }
+    if (waistToHeightRatio !== null && waistToHeightRatio >= 0.6) {
+      recommendation = `La grasa abdominal es prioritaria por salud y rendimiento. ` + recommendation;
+    }
   }
 
   return {
@@ -216,7 +249,7 @@ export const buildObjective = (user: Partial<UserProfile> | null | undefined, pl
     estimatedBF: Number(estimatedBF.toFixed(1)),
     leanMass: Number(leanMass.toFixed(1)),
     bmi: Number(bmi.toFixed(1)),
-    bmiCategory: bmiCategory(bmi),
+    bmiCategory: bmiCategory(bmi, lang),
     waistToHeightRatio: waistToHeightRatio !== null ? Number(waistToHeightRatio.toFixed(2)) : null,
     compositionMethod,
     metabolicRisk,
@@ -230,6 +263,7 @@ export const buildNutritionPlan = (
   planLevel: number,
   weeklyWorkouts: number,
   plan?: Partial<Plan> | null,
+  lang = "es",
 ): NutritionPlan => {
   const goal = user?.goal || "fuerza";
   const weight = Number(user?.weight) || 70;
@@ -303,37 +337,65 @@ export const buildNutritionPlan = (
     }
   }
 
-  const focus =
-    goal === "perdida"
-      ? `Deficit moderado con proteina alta y ${dominantStimulusLabel(planDemand.dominantStimulus)} para proteger masa magra.`
-      : goal === "fuerza"
-        ? strengthCut
-          ? "Fuerza con control de grasa: calorias mas contenidas hasta mejorar la composicion corporal."
-          : `Combustible para sobrecarga progresiva con ${dominantStimulusLabel(planDemand.dominantStimulus)}.`
-        : goal === "cardio"
-          ? `Energia para repetir esfuerzos y recuperar glucogeno con ${dominantStimulusLabel(planDemand.dominantStimulus)}.`
-          : `Recomposicion corporal con volumen util, proteina alta y ${dominantStimulusLabel(planDemand.dominantStimulus)}.`;
+  const focus = lang === "en"
+    ? (goal === "perdida"
+        ? `Moderate deficit with high protein and ${dominantStimulusLabel(planDemand.dominantStimulus, lang)} to protect lean mass.`
+        : goal === "fuerza"
+          ? strengthCut
+            ? "Strength with fat control: lower calories until body composition improves."
+            : `Fuel for progressive overload with ${dominantStimulusLabel(planDemand.dominantStimulus, lang)}.`
+          : goal === "cardio"
+            ? `Energy to repeat efforts and replenish glycogen with ${dominantStimulusLabel(planDemand.dominantStimulus, lang)}.`
+            : `Body recomposition with useful volume, high protein and ${dominantStimulusLabel(planDemand.dominantStimulus, lang)}.`)
+    : (goal === "perdida"
+        ? `Deficit moderado con proteina alta y ${dominantStimulusLabel(planDemand.dominantStimulus)} para proteger masa magra.`
+        : goal === "fuerza"
+          ? strengthCut
+            ? "Fuerza con control de grasa: calorias mas contenidas hasta mejorar la composicion corporal."
+            : `Combustible para sobrecarga progresiva con ${dominantStimulusLabel(planDemand.dominantStimulus)}.`
+          : goal === "cardio"
+            ? `Energia para repetir esfuerzos y recuperar glucogeno con ${dominantStimulusLabel(planDemand.dominantStimulus)}.`
+            : `Recomposicion corporal con volumen util, proteina alta y ${dominantStimulusLabel(planDemand.dominantStimulus)}.`);
 
-  const mealStrategy =
-    planDemand.dominantStimulus === "cardio"
-      ? "Concentra mas carbohidrato antes y despues del entreno; en dias suaves baja ligeramente las raciones de almidon."
-      : planDemand.dominantStimulus === "fuerza"
-        ? "Reparte la proteina en 4-5 tomas y reserva carbohidrato util en desayuno, pre y post entreno."
-        : "Mantiene una base de proteina en todas las comidas y ajusta la carga de carbohidrato segun el dia de entreno.";
+  const mealStrategy = lang === "en"
+    ? (planDemand.dominantStimulus === "cardio"
+        ? "Concentrate more carbs before and after training; on easy days slightly reduce starchy portions."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Spread protein across 4-5 meals and save useful carbs for breakfast, pre- and post-workout."
+          : "Keep a protein base in every meal and adjust carb load based on training days.")
+    : (planDemand.dominantStimulus === "cardio"
+        ? "Concentra mas carbohidrato antes y despues del entreno; en dias suaves baja ligeramente las raciones de almidon."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Reparte la proteina en 4-5 tomas y reserva carbohidrato util en desayuno, pre y post entreno."
+          : "Mantiene una base de proteina en todas las comidas y ajusta la carga de carbohidrato segun el dia de entreno.");
 
-  const preWorkout =
-    planDemand.dominantStimulus === "cardio"
-      ? "Pre: fruta + avena, pan o arroz 60-90 min antes."
-      : planDemand.dominantStimulus === "fuerza"
-        ? "Pre: 25-30 g de proteina + carbohidrato facil 60-120 min antes."
-        : "Pre: comida ligera con proteina y carbohidrato facil de digerir.";
+  const preWorkout = lang === "en"
+    ? (planDemand.dominantStimulus === "cardio"
+        ? "Pre: fruit + oats, bread or rice 60-90 min before."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Pre: 25-30 g protein + easy carbs 60-120 min before."
+          : "Pre: light meal with protein and easy-to-digest carbs.")
+    : (planDemand.dominantStimulus === "cardio"
+        ? "Pre: fruta + avena, pan o arroz 60-90 min antes."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Pre: 25-30 g de proteina + carbohidrato facil 60-120 min antes."
+          : "Pre: comida ligera con proteina y carbohidrato facil de digerir.");
 
-  const postWorkout =
-    planDemand.dominantStimulus === "cardio"
-      ? "Post: liquidos + carbohidrato dominante + 20-30 g de proteina."
-      : planDemand.dominantStimulus === "fuerza"
-        ? "Post: proteina completa + carbohidrato medio para recuperar y rendir en la siguiente sesion."
-        : "Post: proteina completa, verdura y una porcion de carbohidrato segun el desgaste del dia.";
+  const postWorkout = lang === "en"
+    ? (planDemand.dominantStimulus === "cardio"
+        ? "Post: fluids + dominant carbs + 20-30 g protein."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Post: complete protein + medium carbs to recover and perform in the next session."
+          : "Post: complete protein, vegetables and a carb portion based on daily exertion.")
+    : (planDemand.dominantStimulus === "cardio"
+        ? "Post: liquidos + carbohidrato dominante + 20-30 g de proteina."
+        : planDemand.dominantStimulus === "fuerza"
+          ? "Post: proteina completa + carbohidrato medio para recuperar y rendir en la siguiente sesion."
+          : "Post: proteina completa, verdura y una porcion de carbohidrato segun el desgaste del dia.");
+
+  const trainingSummary = lang === "en"
+    ? `${planDemand.sessions} sessions/wk · ${Math.round(planDemand.weeklyMinutes)} min · MET ${planDemand.avgMet.toFixed(1)} · ${dominantStimulusLabel(planDemand.dominantStimulus, lang)}`
+    : `${planDemand.sessions} sesiones/sem · ${Math.round(planDemand.weeklyMinutes)} min · MET ${planDemand.avgMet.toFixed(1)} · ${dominantStimulusLabel(planDemand.dominantStimulus)}`;
 
   return {
     calories: calTarget,
@@ -342,7 +404,7 @@ export const buildNutritionPlan = (
     fats,
     focus,
     hydration: Math.round(weight * 35 + (planDemand.weeklyMinutes / 7) * 12 + planDemand.hiitRatio * 350),
-    trainingSummary: `${planDemand.sessions} sesiones/sem · ${Math.round(planDemand.weeklyMinutes)} min · MET ${planDemand.avgMet.toFixed(1)} · ${dominantStimulusLabel(planDemand.dominantStimulus)}`,
+    trainingSummary,
     mealStrategy,
     preWorkout,
     postWorkout,

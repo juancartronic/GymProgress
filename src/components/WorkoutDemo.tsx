@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { S } from "../theme/styles";
 import { EXDB } from "../domain/data";
 import { applyProfessionalProgression } from "../domain/workout";
@@ -16,6 +17,7 @@ interface WorkoutDemoProps {
 }
 
 export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, savedExtraIds = [], onSaveExtraIds }: WorkoutDemoProps) {
+  const { t } = useTranslation();
   const [left, setLeft] = useState(30);
   const [idx, setIdx] = useState(0);
   const [selectedExtraId, setSelectedExtraId] = useState<ExerciseId>("squat");
@@ -69,12 +71,12 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
   return (
     <div style={{ ...S.container, paddingTop:24 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
-        <button onClick={onBack} style={{ background:"none", border:"none", color:S.muted, cursor:"pointer", fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>← Volver</button>
-        <div style={{ fontFamily:"'DM Mono',monospace", color:S.accent, fontSize:16 }}>Demo {left}s</div>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:S.muted, cursor:"pointer", fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>{t("workoutDemo.back")}</button>
+        <div style={{ fontFamily:"'DM Mono',monospace", color:S.accent, fontSize:16 }}>{t("workoutDemo.demo")} {left}s</div>
       </div>
       <div style={{ ...S.card, marginBottom:16, background:"var(--card-demo-bg)", border:"1px solid #c8ff002f" }}>
-        <h2 style={{ ...S.heading, fontSize:28, margin:"0 0 4px" }}>VISTA PREVIA DEL ENTRENO</h2>
-        <p style={{ fontSize:13, color:S.muted, margin:0 }}>{workout.focus} - Revision rapida de tecnica y ritmo.</p>
+        <h2 style={{ ...S.heading, fontSize:28, margin:"0 0 4px" }}>{t("workoutDemo.previewTitle")}</h2>
+        <p style={{ fontSize:13, color:S.muted, margin:0 }}>{workout.focus} - {t("workoutDemo.previewDesc")}</p>
       </div>
       <div style={{ background:"var(--surface-soft)", borderRadius:20, padding:20, marginBottom:16, display:"flex", justifyContent:"center", height:220, alignItems:"center", overflow:"hidden" }}>
         {Illus ? Illus(S.accent, user?.gender || "masculino") : null}
@@ -90,8 +92,8 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
       </div>
       <div style={{ ...S.card, marginBottom:16, padding:"14px 16px", background:"var(--surface-soft)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:10, flexWrap:"wrap" }}>
-          <span style={S.pill("#7de8b8")}>EXTRAS OPCIONALES</span>
-          <span style={{ fontSize:11, color:S.muted }}>Anade ejercicios antes de iniciar</span>
+          <span style={S.pill("#7de8b8")}>{t("workoutDemo.extras")}</span>
+          <span style={{ fontSize:11, color:S.muted }}>{t("workoutDemo.extrasDesc")}</span>
         </div>
         <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
           <select
@@ -110,13 +112,13 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
             })}
             style={{ ...S.btn("var(--inactive-btn-bg)","var(--text-main)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}
           >
-            + Anadir ejercicio
+            {t("workoutDemo.addExercise")}
           </button>
           <button
             onClick={() => onSaveExtraIds && onSaveExtraIds(extraExercises.map(ex => ex.id))}
             style={{ ...S.btn("var(--surface-inner)","var(--text-main)"), padding:"8px 12px", fontSize:12, border:"1px solid var(--border-main)" }}
           >
-            Guardar extras del perfil
+            {t("workoutDemo.saveExtras")}
           </button>
         </div>
         {extraExercises.length > 0 && (
@@ -128,7 +130,7 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
                   onClick={() => setExtraExercises(prev => prev.filter((_, i) => i !== extraIdx))}
                   style={{ background:"none", border:"none", color:"#ff7f7f", cursor:"pointer", fontSize:12 }}
                 >
-                  Quitar
+                  {t("workoutDemo.remove")}
                 </button>
               </div>
             ))}
@@ -140,14 +142,14 @@ export function WorkoutDemo({ workout, planLevel, onStartNow, onBack, user, save
           const active = i === idx;
           return (
             <div key={i} style={{ ...S.card, padding:"10px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", border:active ? `1px solid ${S.accent}` : "1px solid var(--border-main)", background:active ? "var(--surface-soft)" : "var(--surface-inner)" }}>
-              <div style={{ fontSize:13 }}>{EXDB[item.id].name}{item.custom ? " · extra" : ""}</div>
+              <div style={{ fontSize:13 }}>{EXDB[item.id].name}{item.custom ? ` · ${t("workoutDemo.extra")}` : ""}</div>
               <div style={{ fontSize:11, color:S.muted }}>{item.sets}x{item.reps}{item.isTime ? "s" : ""}{item.loadKg ? ` - ${item.loadKg}kg` : ""}</div>
             </div>
           );
         })}
       </div>
       <button onClick={() => onStartNow(workoutWithExtras)} style={{ ...S.btn(S.accent), width:"100%", justifyContent:"center", fontSize:16, padding:16 }}>
-        Empezar ahora
+        {t("workoutDemo.start")}
       </button>
     </div>
   );
