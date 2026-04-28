@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NavBar } from "../NavBar";
@@ -14,14 +14,16 @@ describe("NavBar", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("renderiza los 3 items con usuario", () => {
+  it("renderiza los 5 items con usuario", () => {
     render(
       <MemoryRouter>
         <NavBar hasUser={true} accent="#c3ff00" muted="#666" />
       </MemoryRouter>,
     );
-    expect(screen.getByText("Inicio")).toBeInTheDocument();
-    expect(screen.getByText("Planes")).toBeInTheDocument();
-    expect(screen.getByText("Historial")).toBeInTheDocument();
+    expect(screen.getByText("nav.home")).toBeInTheDocument();
+    expect(screen.getByText("nav.plans")).toBeInTheDocument();
+    expect(screen.getByText("nav.diet")).toBeInTheDocument();
+    expect(screen.getByText("nav.history")).toBeInTheDocument();
+    expect(screen.getByText("nav.profile")).toBeInTheDocument();
   });
 });

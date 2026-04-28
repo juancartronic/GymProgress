@@ -10,6 +10,30 @@ import type {
 } from "../types";
 import { defaultWeeklyCalendar } from "../domain/data";
 
+const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
+
+const estimateBodyFat = (profile: UserProfile): number | "" => {
+  const weight = Number(profile.weight);
+  const height = Number(profile.height);
+  const age = Number(profile.age);
+  if (!weight || !height || !age || height <= 0) return profile.bodyFat;
+
+  const isMale = profile.gender === "masculino";
+  const bmi = weight / ((height / 100) ** 2);
+  const waist = typeof profile.waistCm === "number" ? profile.waistCm : null;
+
+  const bf = waist && waist > 0
+    ? (isMale ? 64 : 76) - 20 * (height / waist)
+    : 1.39 * bmi + 0.16 * age - 10.34 * (isMale ? 1 : 0) - 9;
+
+  return Number(clamp(bf, 4, 60).toFixed(1));
+};
+
+const withAutoBodyFat = (profile: UserProfile): UserProfile => ({
+  ...profile,
+  bodyFat: estimateBodyFat(profile),
+});
+
 // ─── State ───────────────────────────────────────────────────────────────────
 /** Full app state managed by the reducer, including profiles, workout state, and UI flags. */
 export interface AppReducerState {
@@ -83,7 +107,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
       return { ...state, loaded: true };
 
     case "ADD_PROFILE": {
-      const p = action.payload;
+      const p = withAutoBodyFat(action.payload);
       return {
         ...state,
         profiles: [...state.profiles, p],
@@ -100,7 +124,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
       return {
         ...state,
         profiles: state.profiles.map((p) =>
-          p.id === id ? { ...p, ...data, id: p.id } : p,
+          p.id === id ? withAutoBodyFat({ ...p, ...data, id: p.id }) : p,
         ),
         editingProfileId: null,
       };
@@ -192,7 +216,7 @@ export function appReducer(state: AppReducerState, action: AppAction): AppReduce
       const { userId, entry } = action.payload;
       const log = [...(state.weightLogByProfile[userId] || []), entry];
       const updated = state.profiles.map(p =>
-        p.id === userId ? { ...p, weight: entry.weight } : p
+        p.id === userId ? withAutoBodyFat({ ...p, weight: entry.weight }) : p
       );
       return {
         ...state,

@@ -6,6 +6,7 @@
   "nav": {
     "home": "Inicio",
     "plans": "Planes",
+    "diet": "Dieta",
     "history": "Historial",
     "profile": "Yo"
   },
@@ -116,8 +117,8 @@
     "weight": "Peso",
     "heightLabel": "Altura",
     "height": "Altura",
-    "bodyFatLabel": "Grasa corp.",
-    "bodyFat": "Grasa corp.",
+    "bodyFatLabel": "Grasa corp. est.",
+    "bodyFat": "Grasa corp. est.",
     "section": "PERFIL",
     "sectionProfile": "PERFIL",
     "addProfile": "Añadir perfil",
@@ -163,6 +164,12 @@
     "exercises": "ejercicios",
     "day": "Dia",
     "rest": "desc"
+  },
+  "dietView": {
+    "title": "DIETA",
+    "subtitle": "{{name}}, aqui tienes una guia nutricional para complementar tu entrenamiento.",
+    "weeklyPlanTitle": "Plan semanal",
+    "weeklyPlanText": "Usa esta seccion para revisar y seguir tu plan de comida semanal segun tu objetivo."
   },
   "history": {
     "title": "HISTORIAL",

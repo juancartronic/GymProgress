@@ -43,6 +43,7 @@ export function ProfileView({
   const [reminderHour, setReminderHour] = useState("18");
   const [reminderMin, setReminderMin] = useState("00");
   const [showWeightPrompt, setShowWeightPrompt] = useState(false);
+  const [historyRange, setHistoryRange] = useState<"7d" | "30d" | "6m" | "1y">("7d");
   const [weightInput, setWeightInput] = useState("");
   const [currentLang, setCurrentLang] = useState(i18n.language?.slice(0, 2) || "es");
 
@@ -101,6 +102,23 @@ export function ProfileView({
       toast.error(t("toast.notificationDenied"));
     }
   };
+
+  const getHistoryStartMs = (range: "7d" | "30d" | "6m" | "1y") => {
+    const now = new Date();
+    const start = new Date(now);
+    if (range === "7d") start.setDate(now.getDate() - 6);
+    if (range === "30d") start.setDate(now.getDate() - 29);
+    if (range === "6m") start.setMonth(now.getMonth() - 6);
+    if (range === "1y") start.setFullYear(now.getFullYear() - 1);
+    start.setHours(0, 0, 0, 0);
+    return start.getTime();
+  };
+
+  const historyEntries = (() => {
+    const cutoff = getHistoryStartMs(historyRange);
+    const sorted = [...weightLog].sort((a, b) => a.date.localeCompare(b.date));
+    return sorted.filter((entry) => new Date(`${entry.date}T00:00:00`).getTime() >= cutoff);
+  })();
 
   return (
     <div style={{ ...S.container, paddingTop: 32 }}>
@@ -216,27 +234,66 @@ export function ProfileView({
         )}
 
         {/* Mini gráfica — idéntica a la de Dashboard */}
-        {weightLog.length > 1 && (
+        {weightLog.length > 0 && (
           <div style={{ marginTop: 16 }}>
             <div style={{ fontSize: 11, color: S.muted, marginBottom: 8 }}>📈 {t("profile.weightHistory")}</div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 60 }}>
-              {(() => {
-                const entries = weightLog.slice(-12);
-                const min = Math.min(...entries.map(e => e.weight));
-                const max = Math.max(...entries.map(e => e.weight));
+              {historyEntries.length === 0 ? (
+                <div style={{ fontSize: 11, color: S.muted }}>Sin registros en este periodo.</div>
+              ) : (() => {
+                const min = Math.min(...historyEntries.map(e => e.weight));
+                const max = Math.max(...historyEntries.map(e => e.weight));
                 const range = max - min || 1;
-                return entries.map((e, i) => (
+                return historyEntries.map((e, i) => (
                   <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                     <div style={{ fontSize: 8, color: S.muted }}>{e.weight}</div>
                     <div style={{
-                      width: "100%", maxWidth: 28, borderRadius: 4,
-                      background: i === entries.length - 1 ? S.accent : "var(--surface-soft)",
-                      height: Math.max(6, ((e.weight - min) / range) * 48),
-                    }} />
+                      width: "100%",
+                      maxWidth: 28,
+                      height: 48,
+                      position: "relative",
+                    }}>
+                      <span
+                        style={{
+                          position: "absolute",
+                          bottom: `${Math.max(0, ((e.weight - min) / range) * 40)}px`,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: i === historyEntries.length - 1 ? S.accent : "#7ab8ff",
+                          border: "1px solid var(--bg-main)",
+                        }}
+                      />
+                    </div>
                     <div style={{ fontSize: 7, color: S.muted }}>{e.date.slice(5)}</div>
                   </div>
                 ));
               })()}
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+              {([
+                ["7d", "7 dias"],
+                ["30d", "30 dias"],
+                ["6m", "6 meses"],
+                ["1y", "1 año"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setHistoryRange(value)}
+                  style={{
+                    ...S.btn(historyRange === value ? "#62adff" : "var(--surface-soft)", historyRange === value ? "#080810" : "var(--text-main)"),
+                    padding: "6px 10px",
+                    fontSize: 11,
+                    border: `1px solid ${historyRange === value ? "#62adff" : "var(--border-main)"}`,
+                    borderRadius: 8,
+                    fontWeight: historyRange === value ? 700 : 500,
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         )}

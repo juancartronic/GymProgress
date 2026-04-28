@@ -15,6 +15,7 @@ export function NavBar({ hasUser, accent, muted }: NavBarProps) {
   const NAV_ITEMS = [
     { to: "/dashboard", label: t("nav.home"), icon: "◉" },
     { to: "/plans", label: t("nav.plans"), icon: "☰" },
+    { to: "/diet", label: t("nav.diet"), icon: "🍽" },
     { to: "/history", label: t("nav.history"), icon: "◷" },
     { to: "/yo", label: t("nav.profile"), icon: "👤" },
   ];

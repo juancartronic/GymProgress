@@ -14,6 +14,7 @@ import { WorkoutDemo } from "./src/components/WorkoutDemo";
 import { ActiveWorkout } from "./src/components/ActiveWorkout";
 import { Summary } from "./src/components/Summary";
 import { History } from "./src/components/History";
+import { DietView } from "./src/components/DietView";
 import { ProfileView } from "./src/components/ProfileView";
 import { PageTransition } from "./src/components/PageTransition";
 import { DashboardSkeleton } from "./src/components/Skeleton";
@@ -204,6 +205,9 @@ export default function App(){
         }/>
         <Route path="/history" element={
           user ? <PageTransition><History history={history} user={user}/></PageTransition> : <Navigate to="/onboarding" replace />
+        }/>
+        <Route path="/diet" element={
+          user ? <PageTransition><DietView user={user} history={history} weeklyCalendar={weeklyCalendar}/></PageTransition> : <Navigate to="/onboarding" replace />
         }/>
         <Route path="/demo" element={
           activeWorkout ? (

@@ -6,6 +6,7 @@
   "nav": {
     "home": "Home",
     "plans": "Plans",
+    "diet": "Diet",
     "history": "History",
     "profile": "Me"
   },
@@ -116,8 +117,8 @@
     "weight": "Weight",
     "heightLabel": "Height",
     "height": "Height",
-    "bodyFatLabel": "Body fat",
-    "bodyFat": "Body fat",
+    "bodyFatLabel": "Est. body fat",
+    "bodyFat": "Est. body fat",
     "section": "PROFILE",
     "sectionProfile": "PROFILE",
     "addProfile": "Add profile",
@@ -163,6 +164,12 @@
     "exercises": "exercises",
     "day": "Day",
     "rest": "rest"
+  },
+  "dietView": {
+    "title": "DIET",
+    "subtitle": "{{name}}, here is a nutrition guide to complement your training.",
+    "weeklyPlanTitle": "Weekly plan",
+    "weeklyPlanText": "Use this section to review and follow your weekly meal plan based on your goal."
   },
   "history": {
     "title": "HISTORY",
